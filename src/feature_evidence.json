@@ -1,0 +1,54 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-verify-and-fix-if-needed-the-existing-core-user-flows-already-present-in-the-project-internet-identity-login-logout-shop-discovery-product-listing-product-detail-view-add-to-cart-cart-page-submit-bargain-request-including-best-deal-request-and-product-messages-thread-send-receive",
+      "featureTitle": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+      "files": [
+        "frontend/src/components/BargainRequestForm.tsx",
+        "frontend/src/components/BestDealRequestButton.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CartPage.tsx",
+        "frontend/src/pages/MessagesThreadPage.tsx",
+        "frontend/src/pages/ProductDetailPage.tsx",
+        "frontend/src/pages/ShopDiscoveryPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-ensure-a-clear-user-facing-in-app-error-message-in-english-for-cases-where-backend-calls-fail-e-g-not-authenticated-missing-data-or-unexpected-errors-so-the-app-does-not-silently-fail-during-the-core-flows",
+      "featureTitle": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+      "files": [
+        "frontend/src/components/AuthGate.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/MessagesThreadPage.tsx",
+        "frontend/src/pages/ProductDetailPage.tsx",
+        "frontend/src/pages/ShopDiscoveryPage.tsx",
+        "frontend/src/utils/backendErrors.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
