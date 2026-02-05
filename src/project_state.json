@@ -1,128 +1,173 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 15,
-  "summary": "Initial ICP dapp scaffold for a bargain-shopping app: Motoko backend with authorization/access control, and a React/Vite + Tailwind frontend (shadcn/ui) including Internet Identity authentication and core pages (shop discovery, product details, cart, messages, shopkeeper profile/products). Includes build-template and deploy tooling plus generated brand assets.",
+  "projectStateVersion": 18,
+  "summary": "Bargen is an ICP (Internet Computer) bargain-shopping marketplace dapp. It uses a Motoko backend canister with role-based access control and in-memory storage for user profiles, shop profiles, products, carts, bargain requests, and product-scoped chat messages. The React/Vite + TypeScript frontend (Tailwind + shadcn/ui) integrates Internet Identity for authentication, provides discovery and product detail flows, supports cart actions, bargaining (offers and “best deal” requests), and a chat thread UI with polling. Prices are stored in the backend as USD cents (Nat/bigint), while the frontend displays INR (₹) using Indian locale formatting and converts INR inputs back to USD cents for backend writes.",
   "existing_features": [
     {
       "id": "IF-1",
-      "title": "Motoko backend canister scaffold with authorization/access control",
+      "title": "Role-based authorization and admin bootstrapping (Motoko)",
       "synonyms": [
-        "backend scaffold",
-        "motoko core",
-        "access control"
+        "access control",
+        "authorization mixin",
+        "RBAC"
       ],
-      "description": "Backend canister implemented in Motoko with authorization mixins and access-control module; wired into main canister entrypoint.",
+      "description": "Implements #guest/#user/#admin roles with a mixin that initializes roles using a secret token (first valid caller can become admin), supports role queries (getCallerUserRole/isCallerAdmin) and admin-only role assignment.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-2",
-      "title": "Internet Identity authentication integration (frontend)",
+      "title": "User profile read/save APIs (backend + frontend hooks)",
       "synonyms": [
-        "II login",
-        "auth gate"
+        "profile management",
+        "caller profile"
       ],
-      "description": "Frontend hooks and components for Internet Identity login/logout and gating app routes/content (e.g., AuthGate, LoginButton, useInternetIdentity, useActor).",
+      "description": "Authenticated users can read and save their own user profile (name/email/phone). Admins can read other users’ profiles. Frontend provides React Query hooks and success/error toasts.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-3",
-      "title": "React/Vite + Tailwind frontend scaffold with app layout and navigation",
+      "title": "Shop profile creation (shopkeeper onboarding)",
       "synonyms": [
-        "frontend scaffold",
-        "app shell"
+        "merchant profile",
+        "shop setup"
       ],
-      "description": "App shell components (header/footer/layout) and Vite/TS/Tailwind setup with shared utilities/config.",
+      "description": "Authenticated users can create a shop profile containing name, rating, address, distance (km), price range info, contact phone, and Google Maps URL, with ownership tracked by principal.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-4",
-      "title": "Core user pages: shop discovery, product detail, cart, and messages thread",
+      "title": "Product creation with shop ownership validation",
       "synonyms": [
-        "pages"
+        "create listing",
+        "add product"
       ],
-      "description": "Implemented primary app routes/pages for browsing shops, viewing a product, managing cart view, and viewing a messages thread.",
+      "description": "Authenticated users can create products tied to a shopId; backend validates the shop exists and that the caller is the shop owner. Frontend provides a shopkeeper products page and create-product dialog.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-5",
-      "title": "Shopkeeper management pages: profile form and products",
+      "title": "Public product browsing with embedded shop details",
       "synonyms": [
-        "merchant pages",
-        "shopkeeper"
+        "discovery feed",
+        "marketplace browse"
       ],
-      "description": "Pages for shopkeeper profile editing and listing/managing shopkeeper products.",
+      "description": "Backend exposes a public query to browse products enriched with their shop profile details (sorted by shop then product). Frontend discovery page renders a product grid with shop metadata.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-6",
-      "title": "Bargain request UI components",
+      "title": "Shopping cart add and view (bigint-safe totals)",
       "synonyms": [
-        "best deal",
-        "bargain form"
+        "cart",
+        "order summary"
       ],
-      "description": "UI components for requesting bargains/best-deal interactions (e.g., BargainRequestForm, BestDealRequestButton).",
+      "description": "Authenticated users can add items to a cart and fetch cart items. Frontend cart page joins cart items to products, computes subtotal using bigint arithmetic, and displays totals consistently.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-7",
-      "title": "shadcn/ui component library integrated",
+      "title": "Bargain requests (offers and “best deal” requests)",
       "synonyms": [
-        "ui kit"
+        "negotiation",
+        "make offer"
       ],
-      "description": "Added a broad set of shadcn/ui components to the frontend project template for rapid UI building.",
+      "description": "Authenticated users can send bargain requests for a product with desired price and optional note; includes a UI flow for a special “best deal” request (desiredPrice=0 with a note).",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-8",
-      "title": "Build template and deployment tooling for ICP app",
+      "title": "Product-scoped chat messaging between customer and shopkeeper",
       "synonyms": [
-        "build-template",
-        "dockerfile",
-        "deploy script"
+        "messages",
+        "chat thread"
       ],
-      "description": "Provided build-template with Dockerfile, deploy scripts, ICP canister yaml configs, workspace/package management, and helper scripts (e.g., image prune/resize).",
+      "description": "Backend supports sending messages and querying chat messages for a given product, restricted to participants. Frontend messages thread page polls for new messages, auto-scrolls, and supports sending new messages.",
       "reqIds": [],
       "version": 1
     },
     {
       "id": "IF-9",
-      "title": "Generated brand assets (hero and logo)",
+      "title": "Internet Identity authentication integration (frontend)",
       "synonyms": [
-        "generated images",
-        "branding"
+        "II login",
+        "auth client"
       ],
-      "description": "Generated and included branded hero/banner and logo images under frontend public assets.",
+      "description": "Provides an InternetIdentityProvider context wrapping AuthClient for login/logout, persisted identity loading, and status flags. Includes LoginButton and AuthGate for gating protected pages.",
       "reqIds": [],
       "version": 1
     },
     {
-      "id": "feature-update-the-frontend-currency-formatting-utility-so-all-displayed-prices-are-shown-in-indian-rupees-inr-with-the-symbol-and-indian-number-formatting-e-g-en-in-apply-usd-inr-conversion-consistently-for-any-existing-price-values-that-are-currently-treated-as-usd-minor-units-cents",
-      "title": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
-      "reqIds": [
-        "REQ-1"
+      "id": "IF-10",
+      "title": "Backend actor management with identity switching and cache invalidation",
+      "synonyms": [
+        "useActor",
+        "actor factory"
       ],
+      "description": "Creates an anonymous or authenticated backend actor depending on Internet Identity state, initializes access control with a secret token, and invalidates/refetches React Query data when the actor changes.",
+      "reqIds": [],
       "version": 1
     },
     {
-      "id": "feature-replace-all-user-facing-usd-price-labels-and-placeholders-in-price-entry-fields-with-inr-equivalents-e-g-change-base-price-and-your-desired-price-to-inr-wording-and-examples-so-the-ui-no-longer-references-dollars",
-      "title": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
-      "reqIds": [
-        "REQ-2"
+      "id": "IF-11",
+      "title": "Frontend application shell with routing, layout, and responsive navigation",
+      "synonyms": [
+        "app scaffold",
+        "router",
+        "layout"
       ],
+      "description": "Implements TanStack Router routes (discovery, product detail, cart, shopkeeper profile/products, messages), shared header/footer layout, responsive mobile sheet menu, and dark/light theme support.",
+      "reqIds": [],
       "version": 1
     },
     {
-      "id": "feature-ensure-cart-subtotal-total-display-matches-the-same-usd-inr-conversion-logic-used-for-individual-product-prices-so-totals-and-line-items-are-consistent",
-      "title": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
+      "id": "IF-12",
+      "title": "INR currency display and INR↔USD-cents conversion utilities",
+      "synonyms": [
+        "currency localization",
+        "₹ formatting"
+      ],
+      "description": "Formats backend USD-cent bigint prices as INR (₹) using en-IN number formatting and a fixed exchange rate, and converts INR user inputs back to USD cents for backend storage; UI labels/placeholders are updated to INR.",
       "reqIds": [
+        "REQ-1",
+        "REQ-2",
         "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Phone contact deep links (tel: and WhatsApp)",
+      "synonyms": [
+        "WhatsApp link",
+        "phone link utilities"
+      ],
+      "description": "Utilities sanitize phone numbers and generate tel: and wa.me links; product detail page exposes contact actions for calling and WhatsApp messaging.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Normalized backend error messaging for consistent UX",
+      "synonyms": [
+        "error normalization",
+        "backendErrors"
+      ],
+      "description": "Utility normalizes agent/backend/react-query errors into user-friendly messages and detects authentication-related errors for consistent UI alerts and toast messages.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-publish-the-currently-working-bargen-draft-version-4-as-a-live-non-draft-deployment-so-the-user-can-share-a-stable-public-link-with-others-to-open-in-a-browser",
+      "title": "Publish the currently working Bargen draft (Version 4) as a live (non-draft) deployment so the user can share a stable public link with others to open in a browser.",
+      "reqIds": [
+        "REQ-4"
       ],
       "version": 1
     }
@@ -130,93 +175,44 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Seed app with random shop names and full shop details (shop name, rating, address, distance km, price range, contact number, Google Maps link) and make items available for bargaining",
+      "summary": "Publish the current Bargen draft as a live/shareable deployment (non-draft link)",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Add product catalog seed data for second-hand categories (electronics, books, accessories, sports, tools, etc.) and attach photos to products",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Display and store product prices in Indian Rupees (INR) and convert any existing USD product prices to INR across the website",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Smart Bargain Suggestion feature (auto-suggest fair counter/offer price)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Price Transparency Badge feature (trust/consistency indicator for shop pricing)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Multi-Shop Bargain Mode (broadcast one bargain offer to multiple shops)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Micro-delivery partners integration placeholder (Dunzo/Rapido/Porter quote after deal accepted, e.g., 45 minutes – ₹49)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Reserve & Pick-up option after deal accepted",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Offline mode for chat (store locally when offline, sync when back online)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "AI Deal Assistant (future): suggests counter prices, accept probability, and best times/peak hours for deals",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "WhatsApp deep-link/contact option for customer to message shopkeeper directly",
-      "reqIds": [],
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "architectural_notes": [
-    "Backend: Motoko canister with modular authorization/access-control (mixin-based).",
-    "Frontend: React + Vite + TypeScript with TailwindCSS and shadcn/ui component set.",
-    "Auth: Internet Identity is the primary authentication provider; frontend uses hooks/components to create authenticated actors.",
-    "Deployment: Includes build-template with canister YAMLs and deploy script for ICP workflows.",
-    "Assets: Image pipeline scripts included (resize/prune) with generated brand images stored in public/assets/generated.",
-    "Backend: Added/updated canister migration support (migration.mo) alongside main canister entrypoint changes.",
-    "Build template: Standardized pnpm workspace + ICP canister YAML structure; includes custom ESLint rules for ICP/II best practices.",
-    "Add currency localization/formatting support (INR) for product prices across frontend and seed data."
+    "Backend is a single Motoko actor with modular role-based access control (mixin-based authorization + access-control module).",
+    "Roles are #guest/#user/#admin; browsing is intentionally public while mutations and private reads require authenticated #user (or #admin).",
+    "Frontend uses TanStack Router for routing and @tanstack/react-query for data fetching/mutations with cache invalidation.",
+    "Internet Identity AuthClient is wrapped in a React Context provider; authenticated identity is used to create an ICP actor.",
+    "Actor initialization calls an authorization initializer that can assign the first valid admin based on a secret token.",
+    "UI is built with TailwindCSS and shadcn/ui components, with next-themes providing light/dark theming.",
+    "Currency handling is centralized in a frontend utility: backend stores USD cents; frontend formats and displays INR (₹, en-IN) and converts INR inputs back to USD cents.",
+    "Chat UI uses polling (refetchInterval) rather than streaming/subscriptions.",
+    "Error handling is centralized via a backend error normalizer and toast notifications (sonner)."
   ],
-  "known_issues": [],
+  "known_issues": [
+    "Backend state uses non-stable in-memory structures (Maps/Lists without stable vars or upgrade hooks), so data may be lost on canister upgrade.",
+    "Frontend currency formatting converts bigint to Number, which can overflow/lose precision for large values; a bigint-safe formatter would be safer.",
+    "USD→INR exchange rate is hardcoded in the frontend; it can drift and is not enforced/validated by the backend.",
+    "Several React Query hooks swallow errors and return empty arrays (products/cart/messages), which prevents components from receiving `error` states reliably.",
+    "Product detail lookup fetches the full product list and filters client-side, which is inefficient and can be stale for large catalogs.",
+    "Cart UI shows a delete button but there is no implemented remove-from-cart mutation/API wired up.",
+    "Authorization initialization depends on CAFFEINE_ADMIN_TOKEN being set in the canister environment; missing configuration can trap during actor initialization.",
+    "Role/wording mismatch: shop creation checks for #user permission but error messages refer to “shopkeepers” (no distinct shopkeeper role).",
+    "Duplicate/global CSS sources exist (e.g., frontend/index.css vs frontend/src/index.css), which can cause confusion about the active theme source."
+  ],
   "isFixRequest": false,
   "generatedImages": [
     {
       "filename": "frontend/public/assets/generated/bargen-hero.dim_1600x600.png",
-      "description": "Generated hero/banner image asset for the app branding.",
+      "description": "Generated hero/banner image asset used on the discovery page.",
       "targetWidth": 1600,
       "targetHeight": 600
     },
     {
       "filename": "frontend/public/assets/generated/bargen-logo.dim_512x512.png",
-      "description": "Generated square logo image asset for the app branding.",
+      "description": "Generated square logo image used in the app header and branding.",
       "targetWidth": 512,
       "targetHeight": 512
     }

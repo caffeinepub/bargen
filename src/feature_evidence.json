@@ -2,11 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-frontend-currency-formatting-utility-so-all-displayed-prices-are-shown-in-indian-rupees-inr-with-the-symbol-and-indian-number-formatting-e-g-en-in-apply-usd-inr-conversion-consistently-for-any-existing-price-values-that-are-currently-treated-as-usd-minor-units-cents",
-      "featureTitle": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
+      "featureId": "feature-publish-the-currently-working-bargen-draft-version-4-as-a-live-non-draft-deployment-so-the-user-can-share-a-stable-public-link-with-others-to-open-in-a-browser",
+      "featureTitle": "Publish the currently working Bargen draft (Version 4) as a live (non-draft) deployment so the user can share a stable public link with others to open in a browser.",
       "files": [
-        "frontend/src/pages/ShopkeeperProductsPage.tsx",
-        "frontend/src/utils/currency.ts"
+        "frontend/src/components/AppHeader.tsx",
+        "frontend/src/components/ShareLiveLinkButton.tsx",
+        "frontend/src/utils/liveShareUrl.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,47 +18,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-replace-all-user-facing-usd-price-labels-and-placeholders-in-price-entry-fields-with-inr-equivalents-e-g-change-base-price-and-your-desired-price-to-inr-wording-and-examples-so-the-ui-no-longer-references-dollars",
-      "featureTitle": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
-      "files": [
-        "frontend/src/components/BargainRequestForm.tsx",
-        "frontend/src/pages/ShopkeeperProductsPage.tsx",
-        "frontend/src/pages/ShopkeeperProfileFormPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-cart-subtotal-total-display-matches-the-same-usd-inr-conversion-logic-used-for-individual-product-prices-so-totals-and-line-items-are-consistent",
-      "featureTitle": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
-      "files": [
-        "frontend/src/pages/CartPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
+        "REQ-4"
       ],
       "confidence": "high"
     }

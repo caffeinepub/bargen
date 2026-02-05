@@ -1,77 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Switch all displayed pricing from USD to INR (₹) with consistent USD→INR conversion",
+  "title": "Shareable live link publishing for Bargen v4",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Convert and format all displayed prices as INR (₹) using Indian locale grouping, consistently converting from stored USD cents.",
+      "id": "REQ-4",
+      "summary": "Provide a one-click way to produce a stable, shareable live URL for the current Bargen v4 experience (distinct from any draft/preview URL variants) so others can open it in a browser.",
       "acceptanceCriteria": [
-        "All UI locations that currently show \"$\" currency formatting (via the shared currency utility) display prices as INR (₹) instead.",
-        "The conversion from USD to INR is applied consistently anywhere a product price is shown (same input value results in same INR output across pages).",
-        "Currency formatting uses Indian locale formatting (e.g., 1,00,000 style grouping) rather than en-US grouping."
+        "A new live (non-draft) version is created from the current Version 4 state without requiring additional user input.",
+        "A live/shareable URL is produced for the newly published version (distinct from the draft preview link).",
+        "The published live version loads successfully and matches the current draft functionality (product browsing, cart, bargaining, messaging, and INR price display)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/currency.ts",
-          "operation": "modify",
-          "description": "Update the shared currency utility to (1) convert stored USD minor-units (cents, bigint) into INR minor-units (paise) using a single fixed USD→INR rate constant (no external fetching), and (2) format the result with the ₹ symbol and Indian number grouping (en-IN). Also add a reverse conversion helper for INR-input (rupees) back to stored USD cents so entry forms can remain consistent with existing backend price storage."
+          "path": "frontend/src/utils/liveShareUrl.ts",
+          "operation": "create",
+          "description": "Add a small utility to compute a canonical, shareable 'live' URL from the current location by stripping any draft/preview-only query/hash parameters and preserving the current route (e.g., product detail, cart, messages) so recipients open the same view without draft flags."
         },
         {
-          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "operation": "modify",
-          "description": "Ensure product list price rendering continues to use the shared currency utility so INR formatting/conversion is applied uniformly across discovery cards (no inline formatting)."
+          "path": "frontend/src/components/ShareLiveLinkButton.tsx",
+          "operation": "create",
+          "description": "Create a reusable UI control that generates the live/shareable URL via the liveShareUrl utility and copies it to the clipboard (with a toast confirmation) so users can share the stable public link without additional input. Use the shadcn-ui Button (and optional tooltip/popover if desired) to match existing UI patterns. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/ProductDetailPage.tsx",
+          "path": "frontend/src/components/AppHeader.tsx",
           "operation": "modify",
-          "description": "Ensure product detail base price continues to use the shared currency utility so the INR formatting/conversion is applied uniformly on the detail view (no inline formatting)."
-        },
-        {
-          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
-          "operation": "modify",
-          "description": "Ensure shopkeeper product cards use the shared currency utility for displayed product prices so the INR formatting/conversion is consistent in product-management listings."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Remove USD ($) wording from all user-facing price labels/placeholders and update price entry fields to INR (₹) wording and examples.",
-      "acceptanceCriteria": [
-        "Shopkeeper product creation form no longer shows \"$\" in the price label and examples.",
-        "Bargain offer dialog no longer shows \"$\" in the desired price label and examples.",
-        "No visible \"$\" remains in the product discovery, product detail, cart, or product-management flows."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
-          "operation": "modify",
-          "description": "Update the product creation modal price label and placeholder text from USD ($) to INR (₹) wording/examples. Convert the entered INR amount back to stored USD cents using the reverse conversion helper from the shared currency utility before calling the create-product mutation."
-        },
-        {
-          "path": "frontend/src/components/BargainRequestForm.tsx",
-          "operation": "modify",
-          "description": "Update the bargain offer dialog label and placeholder from USD ($) to INR (₹) wording/examples. Convert the entered INR amount back to stored USD cents using the reverse conversion helper from the shared currency utility before sending the bargain request."
-        },
-        {
-          "path": "frontend/src/pages/ShopkeeperProfileFormPage.tsx",
-          "operation": "modify",
-          "description": "Replace any USD-centric placeholder content that includes \"$\" (e.g., price range examples using $$ / $$$) with INR/₹-based wording so the shopkeeper flow does not reference dollars."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Align cart line items and cart totals/subtotals with the same USD→INR conversion logic used everywhere else.",
-      "acceptanceCriteria": [
-        "Cart line-item prices show INR (₹).",
-        "Cart subtotal/total show INR (₹) and are consistent with the converted line-item prices."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Refactor cart subtotal/total computation to use bigint-safe arithmetic in stored USD cents (avoid Number-based summation), then render line items and totals via the shared currency utility so the same USD→INR conversion and en-IN formatting is applied consistently."
+          "description": "Wire the ShareLiveLinkButton into the existing header navigation (desktop and mobile menu as appropriate) so it is discoverable and available wherever the user is in the app. Ensure the generated link is presented as the 'live' share URL (not a draft/preview link)."
         }
       ]
     }

@@ -1,14 +1,12 @@
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
-import Iter "mo:core/Iter";
 import Time "mo:core/Time";
+import Float "mo:core/Float";
 import Array "mo:core/Array";
 import Order "mo:core/Order";
 import List "mo:core/List";
-import Float "mo:core/Float";
-import Principal "mo:core/Principal";
-
 import Runtime "mo:core/Runtime";
+import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
@@ -135,7 +133,6 @@ actor {
       Runtime.trap("Unauthorized: Only authenticated users can create products");
     };
 
-    // Validate shop ownership
     switch (shops.get(shopId)) {
       case (null) { Runtime.trap("Shop does not exist") };
       case (?shop) {
@@ -256,8 +253,6 @@ actor {
   };
 
   // === Browsing APIs ===
-  // Public browsing endpoint - intentionally accessible to all users including guests
-  // This allows marketplace discovery without authentication
   public query ({ caller }) func browseProductsWithShop() : async [ProductWithShopDetails] {
     var result = List.empty<ProductWithShopDetails>();
 
@@ -299,8 +294,6 @@ actor {
   };
 
   // === Internal (Demo/Seed Data) ===
-
-  // --- Shop and Product Creation ---
   func addShopInternal(name : Text, rating : Nat, address : Text, distance : Float, priceInfo : Text, phone : Text, locationUrl : Text, owner : Principal) : Nat {
     let shopId = nextShopId;
     let shop : ShopProfile = {
@@ -336,7 +329,6 @@ actor {
   };
 
   // === Testing & Migration Demo Functions ===
-  // Admin-only function for testing and debugging
   public query ({ caller }) func getAllShops() : async [ShopProfile] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all shops");

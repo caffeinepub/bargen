@@ -1,39 +1,61 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T03:03:36.981Z",
-  "summary": "Implemented an INR currency formatter with en-IN locale and updated some UI to accept/display INR, but the diff evidence does not fully cover removal of all \"$\" labels/placeholders across the full product flows. Additionally, the changes introduce new INR→USD-cents conversion behavior for user-entered prices (backend storage), which was not explicitly requested.",
+  "generatedAt": "2026-02-05T04:05:04.318Z",
+  "summary": "Diff adds a frontend “Share live link” button and a utility to generate a canonical URL, but does not show any implementation of publishing the draft (Version 4) into a new live/non-draft deployment. There is also an unrelated modification to the Motoko backend (backend/main.mo) that is not evidenced as required for publishing.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents so the UI no longer references dollars (including product discovery, product detail, cart, and product-management flows).",
-      "reason": "Only the BargainRequestForm label/placeholder is clearly shown updated to ₹ in the provided diff excerpt. The shopkeeper product creation form’s price label/placeholder and removal of any remaining \"$\" across discovery/detail/cart/management flows are not evidenced in the truncated diffs.",
+      "id": "REQ-4",
+      "requirement": "Create a new live (non-draft) version from the current Version 4 draft state without requiring additional user input.",
+      "reason": "The diff only adds a share button and URL generation based on window.location; it does not show any mechanism to publish/convert a draft into a distinct live deployment/version.",
       "evidence": [
-        "frontend/src/components/BargainRequestForm.tsx",
-        "frontend/src/pages/ShopkeeperProductsPage.tsx (truncated; price label/placeholder not shown)",
-        "frontend/src/pages/CartPage.tsx (truncated; cannot verify all visible labels/text for $ removal)"
+        "frontend/src/components/ShareLiveLinkButton.tsx",
+        "frontend/src/utils/liveShareUrl.ts"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Produce a live/shareable URL for the newly published version that is distinct from the draft preview link.",
+      "reason": "getLiveShareUrl() returns the current protocol/host/pathname from the current browser location; this does not demonstrate generation of a distinct live URL tied to a newly published version (it may just copy whatever URL the user is currently on).",
+      "evidence": [
+        "frontend/src/utils/liveShareUrl.ts",
+        "frontend/src/components/ShareLiveLinkButton.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Ensure the published live version loads successfully and matches current draft functionality (product browsing, cart, bargaining, messaging, INR display).",
+      "reason": "No changes in the diff demonstrate a separate live deployment/version loading path or deployment configuration; only a UI copy-to-clipboard control was added.",
+      "evidence": [
+        "frontend/src/components/ShareLiveLinkButton.tsx",
+        "frontend/src/components/AppHeader.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added INR→USD cents conversion utility and wired bargain/product creation inputs to convert entered INR into USD cents for backend storage.",
-      "reason": "The request focuses on converting/displaying prices as INR and replacing USD labels/placeholders, but does not explicitly request changing input semantics to accept INR and convert back for backend persistence.",
+      "description": "Added a UI button with tooltip/toasts that copies a generated URL to the clipboard (ShareLiveLinkButton).",
+      "reason": "REQ-4 asks for a live/shareable URL as part of a publish-to-live flow; the diff implements a share/copy UX but does not implement the publish-to-live creation itself, introducing a standalone UI feature that may not satisfy the requested publishing behavior.",
       "evidence": [
-        "frontend/src/utils/currency.ts (convertInrToUsdCents)",
-        "frontend/src/components/BargainRequestForm.tsx (uses convertInrToUsdCents before mutate)",
-        "frontend/src/pages/ShopkeeperProductsPage.tsx (uses convertInrToUsdCents before createProduct mutate)"
+        "frontend/src/components/ShareLiveLinkButton.tsx",
+        "frontend/src/components/AppHeader.tsx"
+      ]
+    },
+    {
+      "description": "Backend/main.mo changes unrelated to publishing (authorization/state management code shown).",
+      "reason": "The BuildRequest is about publishing the current draft as a live shareable version and explicitly discourages unrelated changes; the diff shows backend modifications without evidence they are strictly required for publishing.",
+      "evidence": [
+        "backend/main.mo"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/BargainRequestForm.tsx",
-    "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/ShopkeeperProductsPage.tsx",
-    "frontend/src/pages/ShopkeeperProfileFormPage.tsx",
-    "frontend/src/utils/currency.ts",
+    "frontend/src/components/AppHeader.tsx",
+    "frontend/src/components/ShareLiveLinkButton.tsx",
+    "frontend/src/utils/liveShareUrl.ts",
     "project_state.json"
   ]
 }

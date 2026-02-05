@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ShoppingCart, Store, Menu } from 'lucide-react';
 import LoginButton from './LoginButton';
+import ShareLiveLinkButton from './ShareLiveLinkButton';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,8 +58,9 @@ export default function AppHeader() {
             )}
           </nav>
 
-          {/* Auth Button (Desktop) */}
-          <div className="hidden md:block">
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-3">
+            <ShareLiveLinkButton />
             <LoginButton />
           </div>
 
@@ -98,7 +100,11 @@ export default function AppHeader() {
                     </Link>
                   </>
                 )}
-                <div className="pt-4 border-t border-border">
+                <div className="pt-4 border-t border-border flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <ShareLiveLinkButton />
+                    <span className="text-sm text-muted-foreground">Share this app</span>
+                  </div>
                   <LoginButton />
                 </div>
               </div>

@@ -1,7 +1,7 @@
 {
   "frontend/src/App.tsx": "Main application component with TanStack Router setup, defining all routes (discovery, product detail, cart, shopkeeper profile/products, messages) and wrapping with ThemeProvider and Toaster for notifications.",
   "frontend/src/components/AppLayout.tsx": "Shared layout wrapper component that provides consistent header and footer structure across all pages with flex layout for sticky footer.",
-  "frontend/src/components/AppHeader.tsx": "Responsive navigation header with logo, navigation links (Discover, Cart, My Shop), login button, and mobile menu drawer; visibility of authenticated routes is gated by login state.",
+  "frontend/src/components/AppHeader.tsx": "Responsive navigation header with logo, navigation links (Discover, Cart, My Shop), share button, login button, and mobile menu drawer; visibility of authenticated routes is gated by login state.",
   "frontend/src/components/AppFooter.tsx": "Simple footer component displaying copyright notice with heart icon and link to caffeine.ai.",
   "frontend/src/components/LoginButton.tsx": "Internet Identity login/logout button component with loading states and query cache clearing on logout.",
   "frontend/src/components/AuthGate.tsx": "Authentication wrapper component that shows a clear login prompt card with \"Login Required\" messaging when user is not authenticated, otherwise renders children with proper loading state handling.",
@@ -18,5 +18,7 @@
   "frontend/src/index.css": "Global styles with warm earth-tone OKLCH color palette (terracotta primary, sand secondary, amber accent) for marketplace aesthetic, supporting both light and dark modes.",
   "frontend/tailwind.config.js": "Tailwind configuration extending theme with warm marketplace colors, custom border radius, Inter font family, and animation utilities.",
   "frontend/src/utils/currency.ts": "Utility functions to convert USD cents (backend storage) to INR with Indian locale formatting (₹) using fixed 91.8 exchange rate, and reverse conversion from INR input back to USD cents for backend operations.",
-  "frontend/src/utils/backendErrors.ts": "Utility functions to normalize backend/agent/react-query errors into clear English messages and detect authentication errors for consistent UI error handling."
+  "frontend/src/utils/backendErrors.ts": "Utility functions to normalize backend/agent/react-query errors into clear English messages and detect authentication errors for consistent UI error handling.",
+  "frontend/src/utils/liveShareUrl.ts": "Utility function that generates a canonical, shareable live URL by stripping draft/preview parameters while preserving the current route path.",
+  "frontend/src/components/ShareLiveLinkButton.tsx": "Reusable button component with tooltip that copies the live shareable URL to clipboard and shows success feedback via toast notification."
 }

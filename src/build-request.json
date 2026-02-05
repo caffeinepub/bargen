@@ -1,70 +1,35 @@
 {
   "kind": "build_request",
-  "title": "Convert all product prices from USD to Indian Rupees (INR) across the website",
+  "title": "Publish current Bargen draft as a live shareable version",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
-      "target": "frontend",
+      "id": "REQ-4",
+      "text": "Publish the currently working Bargen draft (Version 4) as a live (non-draft) deployment so the user can share a stable public link with others to open in a browser.",
+      "target": "unknown",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-20"
         ],
         "quotes": [
-          "the product rate which you have mentioned in the website convert them to indian rupess"
+          "pk publish it"
         ]
       },
       "acceptanceCriteria": [
-        "All UI locations that currently show \"$\" currency formatting (via the shared currency utility) display prices as INR (₹) instead.",
-        "The conversion from USD to INR is applied consistently anywhere a product price is shown (same input value results in same INR output across pages).",
-        "Currency formatting uses Indian locale formatting (e.g., 1,00,000 style grouping) rather than en-US grouping."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "convert them to indian rupess"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Shopkeeper product creation form no longer shows \"$\" in the price label and examples.",
-        "Bargain offer dialog no longer shows \"$\" in the desired price label and examples.",
-        "No visible \"$\" remains in the product discovery, product detail, cart, or product-management flows."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "convert them to indian rupess"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Cart line-item prices show INR (₹).",
-        "Cart subtotal/total show INR (₹) and are consistent with the converted line-item prices."
+        "A new live (non-draft) version is created from the current Version 4 state without requiring additional user input.",
+        "A live/shareable URL is produced for the newly published version (distinct from the draft preview link).",
+        "The published live version loads successfully and matches the current draft functionality (product browsing, cart, bargaining, messaging, and INR price display)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui (read-only paths).",
-    "Keep the backend as a single Motoko actor in backend/main.mo; only introduce migration code if strictly necessary."
+    "Do not modify files in frontend immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Do not introduce additional backend canisters or services; keep the single-actor Motoko architecture."
   ],
   "nonGoals": [
-    "Adding real-time exchange-rate fetching from external APIs.",
-    "Changing authentication or authorization behavior.",
-    "Redesigning the application UI beyond the currency text/format updates."
+    "Adding sample products or changing product visibility/seed data.",
+    "Implementing new features (e.g., dual USD+INR display, remove-from-cart, performance optimizations).",
+    "Backend state migrations or schema changes unless strictly required for publishing."
   ],
   "imageRequirements": {
     "required": [],
