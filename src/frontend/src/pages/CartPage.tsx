@@ -23,9 +23,12 @@ export default function CartPage() {
     return { ...item, product };
   }).filter(item => item.product) || [];
 
-  const subtotal = cartWithProducts.reduce((sum, item) => {
-    return sum + (Number(item.product!.price) * Number(item.quantity));
-  }, 0);
+  // Calculate subtotal using bigint arithmetic to avoid precision issues
+  const subtotalInUsdCents = cartWithProducts.reduce((sum, item) => {
+    const itemPrice = item.product!.price;
+    const quantity = item.quantity;
+    return sum + (itemPrice * quantity);
+  }, BigInt(0));
 
   return (
     <AuthGate message="Please log in to view your cart">
@@ -128,7 +131,7 @@ export default function CartPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span className="font-medium">{formatCurrency(BigInt(Math.round(subtotal)))}</span>
+                        <span className="font-medium">{formatCurrency(subtotalInUsdCents)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Items</span>
@@ -140,7 +143,7 @@ export default function CartPage() {
 
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">{formatCurrency(BigInt(Math.round(subtotal)))}</span>
+                      <span className="text-primary">{formatCurrency(subtotalInUsdCents)}</span>
                     </div>
 
                     <Button className="w-full" size="lg">

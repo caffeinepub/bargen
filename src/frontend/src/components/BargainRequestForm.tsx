@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { TrendingDown, Loader2 } from 'lucide-react';
 import { normalizeBackendError } from '../utils/backendErrors';
+import { convertInrToUsdCents } from '../utils/currency';
 
 interface BargainRequestFormProps {
   productId: string;
@@ -31,16 +32,19 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
       return;
     }
 
-    const price = parseFloat(desiredPrice);
-    if (isNaN(price) || price <= 0) {
+    const priceInr = parseFloat(desiredPrice);
+    if (isNaN(priceInr) || priceInr <= 0) {
       toast.error('Please enter a valid price');
       return;
     }
 
     try {
+      // Convert INR to USD cents for backend storage
+      const priceInUsdCents = convertInrToUsdCents(priceInr);
+      
       await sendBargainMutation.mutateAsync({
         productId: BigInt(productId),
-        desiredPrice: BigInt(Math.round(price * 100)),
+        desiredPrice: priceInUsdCents,
         note: note.trim() || null,
       });
 
@@ -70,17 +74,20 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="desiredPrice">Your Desired Price ($) *</Label>
+            <Label htmlFor="desiredPrice">Your Desired Price (₹) *</Label>
             <Input
               id="desiredPrice"
               type="number"
-              step="0.01"
-              min="0.01"
+              step="1"
+              min="1"
               value={desiredPrice}
               onChange={(e) => setDesiredPrice(e.target.value)}
-              placeholder="e.g., 79.99"
+              placeholder="e.g., 7344"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Enter your offer in Indian Rupees (₹)
+            </p>
           </div>
 
           <div className="space-y-2">

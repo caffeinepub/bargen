@@ -136,8 +136,11 @@ export default function ShopkeeperProfileFormPage() {
                     id="priceInfo"
                     value={formData.priceInfo}
                     onChange={(e) => setFormData({ ...formData, priceInfo: e.target.value })}
-                    placeholder="e.g., $$ - Moderate, $$$ - Expensive"
+                    placeholder="e.g., ₹₹ - Moderate, ₹₹₹ - Premium"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Use ₹ symbols to indicate price range (₹ = Budget, ₹₹ = Moderate, ₹₹₹ = Premium)
+                  </p>
                 </div>
 
                 <div className="space-y-2">

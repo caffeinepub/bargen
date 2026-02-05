@@ -1,77 +1,70 @@
 {
   "kind": "build_request",
-  "title": "Ensure the bargaining website is a working, runnable model (no new features)",
+  "title": "Convert all product prices from USD to Indian Rupees (INR) across the website",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-      "target": "both",
+      "text": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-16"
+          "msg-1"
         ],
         "quotes": [
-          "can you make my bargening website or not tell me directly"
+          "the product rate which you have mentioned in the website convert them to indian rupess"
         ]
       },
       "acceptanceCriteria": [
-        "Frontend builds successfully with no TypeScript errors",
-        "Backend canister builds successfully with no Motoko errors",
-        "App loads in the browser and renders the main layout (header/nav + main content)"
+        "All UI locations that currently show \"$\" currency formatting (via the shared currency utility) display prices as INR (₹) instead.",
+        "The conversion from USD to INR is applied consistently anywhere a product price is shown (same input value results in same INR output across pages).",
+        "Currency formatting uses Indian locale formatting (e.g., 1,00,000 style grouping) rather than en-US grouping."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
-      "target": "both",
+      "text": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-12",
-          "msg-16"
+          "msg-1"
         ],
         "quotes": [
-          "i need mini bargening app",
-          "yes give me the working model",
-          "can you make my bargening website or not tell me directly"
+          "convert them to indian rupess"
         ]
       },
       "acceptanceCriteria": [
-        "A user can log in with Internet Identity and log out successfully",
-        "Shop discovery page loads and displays products without crashing",
-        "Product detail page loads for a selected product and shows product info",
-        "User can add a product to the cart and the cart page reflects the item",
-        "User can submit a bargain request and the action completes successfully",
-        "User can open a messages thread for a product and send a message successfully"
+        "Shopkeeper product creation form no longer shows \"$\" in the price label and examples.",
+        "Bargain offer dialog no longer shows \"$\" in the desired price label and examples.",
+        "No visible \"$\" remains in the product discovery, product detail, cart, or product-management flows."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+      "text": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-16"
+          "msg-1"
         ],
         "quotes": [
-          "tell me directly"
+          "convert them to indian rupess"
         ]
       },
       "acceptanceCriteria": [
-        "If an authenticated-only action is attempted while logged out, the UI shows a clear English message explaining that login is required",
-        "If any core flow API call fails, the UI shows a toast or inline error message in English"
+        "Cart line-item prices show INR (₹).",
+        "Cart subtotal/total show INR (₹) and are consistent with the converted line-item prices."
       ]
     }
   ],
   "constraints": [
-    "Do not add new product features beyond the existing bargaining app scaffold (no new modes, AI, delivery, offline sync, or multi-shop logic).",
-    "Respect the single-actor backend architecture: keep all Motoko logic in backend/main.mo and only add migration logic if state changes require it.",
-    "Do not edit any frontend files under the immutable paths listed in SYSTEM_CONTEXT."
+    "Do not edit any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui (read-only paths).",
+    "Keep the backend as a single Motoko actor in backend/main.mo; only introduce migration code if strictly necessary."
   ],
   "nonGoals": [
-    "Adding new features from the project_state planned enhancements list (seeded INR data, product photo generation, smart bargain suggestion, price transparency badges, multi-shop bargain mode, delivery partners, reserve/pick-up, offline mode, AI deal assistant).",
-    "Creating new brand assets or changing the existing logo/hero images."
+    "Adding real-time exchange-rate fetching from external APIs.",
+    "Changing authentication or authorization behavior.",
+    "Redesigning the application UI beyond the currency text/format updates."
   ],
   "imageRequirements": {
     "required": [],

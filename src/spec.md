@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Ensure the existing bargaining website scaffold builds and runs end-to-end as a working, runnable model (no new features).
+**Goal:** Display all product and cart prices across the website in Indian Rupees (INR) with ₹ and Indian number formatting, applying a consistent USD→INR conversion from existing USD minor-unit values.
 
 **Planned changes:**
-- Fix any build/runtime issues so the frontend builds without TypeScript errors and the backend canister builds without Motoko errors.
-- Verify and repair (as needed) the existing core flows: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart and cart page, submit bargain request (including best-deal request), and product messages thread send/receive.
-- Add/ensure clear in-app English error messaging (toast or inline) when core backend calls fail (e.g., not authenticated, missing data, unexpected errors) so the UI does not silently fail.
+- Update the shared frontend currency/price formatting utility to output INR (₹) using Indian locale formatting (en-IN) and apply a consistent USD→INR conversion for existing price values treated as USD cents.
+- Replace all user-facing USD labels, placeholders, and examples in price entry fields (e.g., product creation and bargain offer flows) to INR wording and ₹ examples.
+- Ensure cart line items and subtotal/total use the same conversion + formatting logic as individual product prices so totals remain consistent.
 
-**User-visible outcome:** The app loads in the browser and renders the main layout; users can log in/out, browse shops/products, view product details, add items to cart, submit bargain requests, and send/receive product messages, with clear English error messages when something goes wrong.
+**User-visible outcome:** All prices throughout product browsing, product details, cart, and product-management/bargain flows appear in INR (₹) with Indian-style digit grouping, and no UI text references USD/$.

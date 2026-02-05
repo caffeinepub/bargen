@@ -1,46 +1,39 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:48:46.824Z",
-  "summary": "Diff focuses on improving user-facing error handling (toasts/alerts + AuthGate) and tightening several core flow UI behaviors (bargain, best deal, product detail, cart, messages). However, from the provided diff summary alone it is not possible to verify end-to-end build/deploy success or confirm that all REQ-2 flows are fully fixed end-to-end (backend + frontend) because the backend change is truncated and no build/deploy evidence is included.",
+  "generatedAt": "2026-02-05T03:03:36.981Z",
+  "summary": "Implemented an INR currency formatter with en-IN locale and updated some UI to accept/display INR, but the diff evidence does not fully cover removal of all \"$\" labels/placeholders across the full product flows. Additionally, the changes introduce new INR→USD-cents conversion behavior for user-entered prices (backend storage), which was not explicitly requested.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-      "reason": "The diff shows multiple frontend/backend code changes but provides no evidence of successful builds (TypeScript/Motoko) or that the deployed app loads and renders (no CI/build logs, no config fixes shown, backend diff is truncated).",
-      "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend-file-summaries.txt (summary only; no build confirmation)"
-      ]
-    },
-    {
       "id": "REQ-2",
-      "requirement": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
-      "reason": "Frontend work for these flows is shown, but the backend implementation and end-to-end correctness cannot be confirmed from the truncated backend diff and partial frontend diffs (e.g., whether all required canister methods exist/compile and the flows complete successfully at runtime).",
+      "requirement": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents so the UI no longer references dollars (including product discovery, product detail, cart, and product-management flows).",
+      "reason": "Only the BargainRequestForm label/placeholder is clearly shown updated to ₹ in the provided diff excerpt. The shopkeeper product creation form’s price label/placeholder and removal of any remaining \"$\" across discovery/detail/cart/management flows are not evidenced in the truncated diffs.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useQueries.ts (truncated)",
-        "frontend/src/pages/CartPage.tsx (truncated)",
-        "frontend/src/pages/MessagesThreadPage.tsx (truncated)",
-        "frontend/src/pages/ProductDetailPage.tsx (truncated)",
-        "frontend/src/pages/ShopDiscoveryPage.tsx (truncated)"
+        "frontend/src/components/BargainRequestForm.tsx",
+        "frontend/src/pages/ShopkeeperProductsPage.tsx (truncated; price label/placeholder not shown)",
+        "frontend/src/pages/CartPage.tsx (truncated; cannot verify all visible labels/text for $ removal)"
       ]
     }
   ],
-  "hallucinated_features": [],
+  "hallucinated_features": [
+    {
+      "description": "Added INR→USD cents conversion utility and wired bargain/product creation inputs to convert entered INR into USD cents for backend storage.",
+      "reason": "The request focuses on converting/displaying prices as INR and replacing USD labels/placeholders, but does not explicitly request changing input semantics to accept INR and convert back for backend persistence.",
+      "evidence": [
+        "frontend/src/utils/currency.ts (convertInrToUsdCents)",
+        "frontend/src/components/BargainRequestForm.tsx (uses convertInrToUsdCents before mutate)",
+        "frontend/src/pages/ShopkeeperProductsPage.tsx (uses convertInrToUsdCents before createProduct mutate)"
+      ]
+    }
+  ],
   "confidence": 0.62,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AuthGate.tsx",
     "frontend/src/components/BargainRequestForm.tsx",
-    "frontend/src/components/BestDealRequestButton.tsx",
-    "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/MessagesThreadPage.tsx",
-    "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopDiscoveryPage.tsx",
-    "frontend/src/utils/backendErrors.ts",
+    "frontend/src/pages/ShopkeeperProductsPage.tsx",
+    "frontend/src/pages/ShopkeeperProfileFormPage.tsx",
+    "frontend/src/utils/currency.ts",
     "project_state.json"
   ]
 }

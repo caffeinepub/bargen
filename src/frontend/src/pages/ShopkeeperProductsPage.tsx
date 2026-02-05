@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Plus, Package, Loader2 } from 'lucide-react';
-import { formatCurrency } from '../utils/currency';
+import { formatCurrency, convertInrToUsdCents } from '../utils/currency';
 
 export default function ShopkeeperProductsPage() {
   const navigate = useNavigate();
@@ -43,18 +43,21 @@ export default function ShopkeeperProductsPage() {
       return;
     }
 
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
+    const priceInr = parseFloat(formData.price);
+    if (isNaN(priceInr) || priceInr < 0) {
       toast.error('Price must be a positive number');
       return;
     }
 
     try {
+      // Convert INR to USD cents for backend storage
+      const priceInUsdCents = convertInrToUsdCents(priceInr);
+      
       await createProductMutation.mutateAsync({
         shopId: BigInt(formData.shopId),
         name: formData.name,
         description: formData.description,
-        price: BigInt(Math.round(price * 100)), // Store as cents
+        price: priceInUsdCents,
       });
 
       toast.success('Product created successfully!');
@@ -128,17 +131,20 @@ export default function ShopkeeperProductsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Base Price ($) *</Label>
+                    <Label htmlFor="price">Base Price (₹) *</Label>
                     <Input
                       id="price"
                       type="number"
-                      step="0.01"
+                      step="1"
                       min="0"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="e.g., 99.99"
+                      placeholder="e.g., 9180"
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Enter price in Indian Rupees (₹)
+                    </p>
                   </div>
 
                   <div className="flex gap-4 pt-4">

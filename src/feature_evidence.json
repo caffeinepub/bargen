@@ -2,16 +2,32 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-verify-and-fix-if-needed-the-existing-core-user-flows-already-present-in-the-project-internet-identity-login-logout-shop-discovery-product-listing-product-detail-view-add-to-cart-cart-page-submit-bargain-request-including-best-deal-request-and-product-messages-thread-send-receive",
-      "featureTitle": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+      "featureId": "feature-update-the-frontend-currency-formatting-utility-so-all-displayed-prices-are-shown-in-indian-rupees-inr-with-the-symbol-and-indian-number-formatting-e-g-en-in-apply-usd-inr-conversion-consistently-for-any-existing-price-values-that-are-currently-treated-as-usd-minor-units-cents",
+      "featureTitle": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
+      "files": [
+        "frontend/src/pages/ShopkeeperProductsPage.tsx",
+        "frontend/src/utils/currency.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-all-user-facing-usd-price-labels-and-placeholders-in-price-entry-fields-with-inr-equivalents-e-g-change-base-price-and-your-desired-price-to-inr-wording-and-examples-so-the-ui-no-longer-references-dollars",
+      "featureTitle": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
       "files": [
         "frontend/src/components/BargainRequestForm.tsx",
-        "frontend/src/components/BestDealRequestButton.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CartPage.tsx",
-        "frontend/src/pages/MessagesThreadPage.tsx",
-        "frontend/src/pages/ProductDetailPage.tsx",
-        "frontend/src/pages/ShopDiscoveryPage.tsx"
+        "frontend/src/pages/ShopkeeperProductsPage.tsx",
+        "frontend/src/pages/ShopkeeperProfileFormPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -27,15 +43,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-ensure-a-clear-user-facing-in-app-error-message-in-english-for-cases-where-backend-calls-fail-e-g-not-authenticated-missing-data-or-unexpected-errors-so-the-app-does-not-silently-fail-during-the-core-flows",
-      "featureTitle": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+      "featureId": "feature-ensure-cart-subtotal-total-display-matches-the-same-usd-inr-conversion-logic-used-for-individual-product-prices-so-totals-and-line-items-are-consistent",
+      "featureTitle": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
       "files": [
-        "frontend/src/components/AuthGate.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/MessagesThreadPage.tsx",
-        "frontend/src/pages/ProductDetailPage.tsx",
-        "frontend/src/pages/ShopDiscoveryPage.tsx",
-        "frontend/src/utils/backendErrors.ts"
+        "frontend/src/pages/CartPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",

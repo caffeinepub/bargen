@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
-  "summary": "ICP dapp scaffold for Bargen (bargain-shopping mediator between customers and shopkeepers): Motoko backend with authorization/access control + React/Vite/Tailwind (shadcn/ui) frontend with Internet Identity auth and core pages (shop discovery, product details, cart, messages, shopkeeper profile/products, bargain/best-deal UI). Planned enhancements include seeded demo shops/products (INR pricing + product photos), multi-shop bargaining, smart/AI deal assistance, price transparency badges, offline-first chat/sync, and optional micro-delivery + reserve/pick-up flows, plus supporting docs (architecture diagram, wireframes, pitch, roadmap).",
+  "projectStateVersion": 15,
+  "summary": "Initial ICP dapp scaffold for a bargain-shopping app: Motoko backend with authorization/access control, and a React/Vite + Tailwind frontend (shadcn/ui) including Internet Identity authentication and core pages (shop discovery, product details, cart, messages, shopkeeper profile/products). Includes build-template and deploy tooling plus generated brand assets.",
   "existing_features": [
     {
       "id": "IF-1",
@@ -103,16 +103,24 @@
       "version": 1
     },
     {
-      "id": "feature-verify-and-fix-if-needed-the-existing-core-user-flows-already-present-in-the-project-internet-identity-login-logout-shop-discovery-product-listing-product-detail-view-add-to-cart-cart-page-submit-bargain-request-including-best-deal-request-and-product-messages-thread-send-receive",
-      "title": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+      "id": "feature-update-the-frontend-currency-formatting-utility-so-all-displayed-prices-are-shown-in-indian-rupees-inr-with-the-symbol-and-indian-number-formatting-e-g-en-in-apply-usd-inr-conversion-consistently-for-any-existing-price-values-that-are-currently-treated-as-usd-minor-units-cents",
+      "title": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-all-user-facing-usd-price-labels-and-placeholders-in-price-entry-fields-with-inr-equivalents-e-g-change-base-price-and-your-desired-price-to-inr-wording-and-examples-so-the-ui-no-longer-references-dollars",
+      "title": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-ensure-a-clear-user-facing-in-app-error-message-in-english-for-cases-where-backend-calls-fail-e-g-not-authenticated-missing-data-or-unexpected-errors-so-the-app-does-not-silently-fail-during-the-core-flows",
-      "title": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+      "id": "feature-ensure-cart-subtotal-total-display-matches-the-same-usd-inr-conversion-logic-used-for-individual-product-prices-so-totals-and-line-items-are-consistent",
+      "title": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
       "reqIds": [
         "REQ-3"
       ],
@@ -122,94 +130,68 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Seed demo shopkeepers with random shop names/details (shop name, ratings, address, distance in km, contact, Google Maps link) and fixed prices that can be bargained",
+      "summary": "Seed app with random shop names and full shop details (shop name, rating, address, distance km, price range, contact number, Google Maps link) and make items available for bargaining",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Seed demo products across provided second-hand categories and ensure prices display in Indian Rupees (₹)",
+      "summary": "Add product catalog seed data for second-hand categories (electronics, books, accessories, sports, tools, etc.) and attach photos to products",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Generate and attach product photos/images for seeded products",
+      "summary": "Display and store product prices in Indian Rupees (INR) and convert any existing USD product prices to INR across the website",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Smart Bargain Suggestion feature (auto-suggest fair price/counter based on data)",
+      "summary": "Smart Bargain Suggestion feature (auto-suggest fair counter/offer price)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "Price Transparency Badge feature (indicate trustworthy/consistent pricing)",
+      "summary": "Price Transparency Badge feature (trust/consistency indicator for shop pricing)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-6",
-      "summary": "Multi-Shop Bargain Mode (send one bargain to multiple shops)",
+      "summary": "Multi-Shop Bargain Mode (broadcast one bargain offer to multiple shops)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-7",
-      "summary": "Micro-delivery partners integration (optional) with delivery quote after deal acceptance (e.g., Dunzo/Rapido/Porter)",
+      "summary": "Micro-delivery partners integration placeholder (Dunzo/Rapido/Porter quote after deal accepted, e.g., 45 minutes – ₹49)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-8",
-      "summary": "Reserve & Pick-Up option after deal accepted",
+      "summary": "Reserve & Pick-up option after deal accepted",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-9",
-      "summary": "Offline mode for chat/actions: store locally when network drops and sync when online",
+      "summary": "Offline mode for chat (store locally when offline, sync when back online)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-10",
-      "summary": "AI Deal Assistant (future): suggest counter prices, acceptance probability, and peak hours for best deals",
+      "summary": "AI Deal Assistant (future): suggests counter prices, accept probability, and best times/peak hours for deals",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-11",
-      "summary": "Produce full feature architecture diagram",
+      "summary": "WhatsApp deep-link/contact option for customer to message shopkeeper directly",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Create UI wireframes for both customer and shopkeeper experiences",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Startup pitch + problem/solution slide content",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "MVP development roadmap document",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-15",
-      "summary": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-      "reqIds": [
-        "REQ-1"
-      ],
       "status": "pending"
     }
   ],
@@ -221,9 +203,7 @@
     "Assets: Image pipeline scripts included (resize/prune) with generated brand images stored in public/assets/generated.",
     "Backend: Added/updated canister migration support (migration.mo) alongside main canister entrypoint changes.",
     "Build template: Standardized pnpm workspace + ICP canister YAML structure; includes custom ESLint rules for ICP/II best practices.",
-    "Demo/seed data requested: random shopkeepers + second-hand product catalog for testing.",
-    "UI/UX requirement: display product prices in Indian Rupees (₹).",
-    "Assets requirement: generate product photos for seeded catalog items."
+    "Add currency localization/formatting support (INR) for product prices across frontend and seed data."
   ],
   "known_issues": [],
   "isFixRequest": false,
@@ -241,6 +221,7 @@
       "targetHeight": 512
     }
   ],
+  "gameProjectType": "none",
   "projectName": "Bargen",
   "clarification_mode": "instant",
   "clarification_rounds": 0

@@ -1,130 +1,77 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Stabilize existing bargaining app scaffold to run end-to-end (frontend-only)",
+  "title": "Switch all displayed pricing from USD to INR (₹) with consistent USD→INR conversion",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Ensure the existing app builds without frontend errors and loads the main layout in the browser.",
+      "summary": "Convert and format all displayed prices as INR (₹) using Indian locale grouping, consistently converting from stored USD cents.",
       "acceptanceCriteria": [
-        "Frontend builds successfully with no TypeScript errors",
-        "Backend canister builds successfully with no Motoko errors",
-        "App loads in the browser and renders the main layout (header/nav + main content)"
+        "All UI locations that currently show \"$\" currency formatting (via the shared currency utility) display prices as INR (₹) instead.",
+        "The conversion from USD to INR is applied consistently anywhere a product price is shown (same input value results in same INR output across pages).",
+        "Currency formatting uses Indian locale formatting (e.g., 1,00,000 style grouping) rather than en-US grouping."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/utils/currency.ts",
           "operation": "modify",
-          "description": "Fix any TypeScript-unsafe backend actor initialization calls so the project compiles cleanly (e.g., avoid relying on undeclared actor methods in the generated type surface) while preserving current behavior. Verify the component's usage instructions before implementing. (Use the authorization component guidance to keep Internet Identity session changes and cache invalidation correct.)"
+          "description": "Update the shared currency utility to (1) convert stored USD minor-units (cents, bigint) into INR minor-units (paise) using a single fixed USD→INR rate constant (no external fetching), and (2) format the result with the ₹ symbol and Indian number grouping (en-IN). Also add a reverse conversion helper for INR-input (rupees) back to stored USD cents so entry forms can remain consistent with existing backend price storage."
         },
         {
-          "path": "frontend/public/assets/generated/bargen-hero.dim_1600x600.png",
-          "operation": "create",
-          "description": "Add the generated hero image asset to the exact public path referenced by the UI so the app loads without missing static assets: frontend/public/assets/generated/bargen-hero.dim_1600x600.png."
-        },
-        {
-          "path": "frontend/public/assets/generated/bargen-logo.dim_512x512.png",
-          "operation": "create",
-          "description": "Add the generated logo image asset to the exact public path referenced by the UI so the app loads without missing static assets: frontend/public/assets/generated/bargen-logo.dim_512x512.png."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
           "operation": "modify",
-          "description": "Confirm routing + global providers render without runtime errors (router tree, layout, and toast provider). If any import/path issues exist, correct them without introducing new routes. Verify the component's usage instructions before implementing. (Use shadcn-ui Toaster integration already present for global notifications.)"
+          "description": "Ensure product list price rendering continues to use the shared currency utility so INR formatting/conversion is applied uniformly across discovery cards (no inline formatting)."
+        },
+        {
+          "path": "frontend/src/pages/ProductDetailPage.tsx",
+          "operation": "modify",
+          "description": "Ensure product detail base price continues to use the shared currency utility so the INR formatting/conversion is applied uniformly on the detail view (no inline formatting)."
+        },
+        {
+          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure shopkeeper product cards use the shared currency utility for displayed product prices so the INR formatting/conversion is consistent in product-management listings."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Verify and fix existing core user flows (login/logout, discovery/listing, product details, cart, bargain requests incl. best-deal, and product messaging).",
+      "summary": "Remove USD ($) wording from all user-facing price labels/placeholders and update price entry fields to INR (₹) wording and examples.",
       "acceptanceCriteria": [
-        "A user can log in with Internet Identity and log out successfully",
-        "Shop discovery page loads and displays products without crashing",
-        "Product detail page loads for a selected product and shows product info",
-        "User can add a product to the cart and the cart page reflects the item",
-        "User can submit a bargain request and the action completes successfully",
-        "User can open a messages thread for a product and send a message successfully"
+        "Shopkeeper product creation form no longer shows \"$\" in the price label and examples.",
+        "Bargain offer dialog no longer shows \"$\" in the desired price label and examples.",
+        "No visible \"$\" remains in the product discovery, product detail, cart, or product-management flows."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/LoginButton.tsx",
+          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "operation": "modify",
-          "description": "Harden Internet Identity login/logout flow handling so it remains reliable (status state, retry on stale auth, and clearing cached app data on logout). Verify the component's usage instructions before implementing. (Use the authorization component guidance for logout cache clearing and login error handling.)"
-        },
-        {
-          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the discovery/product listing flow never crashes: handle query error states and safe navigation behavior when products are unavailable, while keeping the existing discovery UX and routes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ProductDetailPage.tsx",
-          "operation": "modify",
-          "description": "Stabilize product detail flow: ensure product lookup failures, backend failures, and missing/invalid productId cases are handled gracefully; keep add-to-cart, bargain request, best-deal request, and message navigation working as implemented. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the cart flow is robust: handle empty/loading/error states cleanly and prevent crashes when product lookup for cart items fails; keep AuthGate-protected access intact. Verify the component's usage instructions before implementing."
+          "description": "Update the product creation modal price label and placeholder text from USD ($) to INR (₹) wording/examples. Convert the entered INR amount back to stored USD cents using the reverse conversion helper from the shared currency utility before calling the create-product mutation."
         },
         {
           "path": "frontend/src/components/BargainRequestForm.tsx",
           "operation": "modify",
-          "description": "Verify bargain request submission completes successfully and provides user feedback across success/failure; ensure best-effort validation and clear failure messaging without adding new bargain features. Verify the component's usage instructions before implementing."
+          "description": "Update the bargain offer dialog label and placeholder from USD ($) to INR (₹) wording/examples. Convert the entered INR amount back to stored USD cents using the reverse conversion helper from the shared currency utility before sending the bargain request."
         },
         {
-          "path": "frontend/src/components/BestDealRequestButton.tsx",
+          "path": "frontend/src/pages/ShopkeeperProfileFormPage.tsx",
           "operation": "modify",
-          "description": "Verify the 'best deal' request flow (zero-price request) completes successfully and shows a clear success/failure message, without introducing new bargaining modes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/MessagesThreadPage.tsx",
-          "operation": "modify",
-          "description": "Stabilize messages thread send/receive flow: ensure product/shop owner resolution is safe, sending failures are surfaced, and message rendering does not crash on unexpected data; keep AuthGate protection. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Make core flow queries/mutations resilient: ensure browse/products, cart, bargain, and messaging hooks surface failures predictably (no silent failures), avoid unsafe BigInt conversions where possible, and keep cache invalidation behavior correct. Verify the component's usage instructions before implementing."
+          "description": "Replace any USD-centric placeholder content that includes \"$\" (e.g., price range examples using $$ / $$$) with INR/₹-based wording so the shopkeeper flow does not reference dollars."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Add/ensure clear English in-app error messaging for backend call failures across core flows (no silent failures).",
+      "summary": "Align cart line items and cart totals/subtotals with the same USD→INR conversion logic used everywhere else.",
       "acceptanceCriteria": [
-        "If an authenticated-only action is attempted while logged out, the UI shows a clear English message explaining that login is required",
-        "If any core flow API call fails, the UI shows a toast or inline error message in English"
+        "Cart line-item prices show INR (₹).",
+        "Cart subtotal/total show INR (₹) and are consistent with the converted line-item prices."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/backendErrors.ts",
-          "operation": "create",
-          "description": "Create a small shared helper to normalize backend/agent/react-query errors into clear English messages (e.g., unauthorized/login required, missing data, unexpected failure) for consistent UI display across core flows."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/pages/CartPage.tsx",
           "operation": "modify",
-          "description": "Wire standardized error normalization into core flow queries/mutations (onError handlers and/or returned error messages) so failures reliably result in a toast or inline error message instead of silent failure. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "operation": "modify",
-          "description": "Add an inline, user-facing English error state (or toast) when product browsing fails so discovery does not silently fail. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ProductDetailPage.tsx",
-          "operation": "modify",
-          "description": "Ensure backend call failures on product detail (load, add-to-cart, bargain request, best-deal request, and message navigation prerequisites) produce clear English toast/inline errors, including explicit 'login required' messaging when applicable. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/MessagesThreadPage.tsx",
-          "operation": "modify",
-          "description": "Ensure message thread load/send failures surface clear English errors and do not silently fail; include 'login required' messaging where relevant. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/AuthGate.tsx",
-          "operation": "modify",
-          "description": "Ensure the logged-out gating screen provides a clear English explanation and remains consistent across gated pages. Verify the component's usage instructions before implementing. (Use the authorization component frontend guidance for authenticated-only UX and handling authorization traps gracefully.)"
+          "description": "Refactor cart subtotal/total computation to use bigint-safe arithmetic in stored USD cents (avoid Number-based summation), then render line items and totals via the shared currency utility so the same USD→INR conversion and en-IN formatting is applied consistently."
         }
       ]
     }

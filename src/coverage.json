@@ -1,89 +1,68 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:48:46.862Z",
+  "generatedAt": "2026-02-05T03:03:37.018Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 3,
-    "implemented": 2,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-        "status": "missing",
+        "summary": "Update the frontend currency formatting utility so all displayed prices are shown in Indian Rupees (INR) with the ₹ symbol and Indian number formatting (e.g., en-IN). Apply USD→INR conversion consistently for any existing price values that are currently treated as USD minor-units (cents).",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useActor.ts",
-          "frontend/public/assets/generated/bargen-hero.dim_1600x600.png",
-          "frontend/public/assets/generated/bargen-logo.dim_512x512.png",
-          "frontend/src/App.tsx"
+          "frontend/src/utils/currency.ts",
+          "frontend/src/pages/ShopDiscoveryPage.tsx",
+          "frontend/src/pages/ProductDetailPage.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/utils/currency.ts",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+        "summary": "Replace all user-facing USD price labels and placeholders in price entry fields with INR equivalents (e.g., change \"Base Price ($)\" and \"Your Desired Price ($)\" to INR wording and ₹ examples) so the UI no longer references dollars.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/LoginButton.tsx",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/CartPage.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "frontend/src/components/BargainRequestForm.tsx",
-          "frontend/src/components/BestDealRequestButton.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/ShopkeeperProfileFormPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/CartPage.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "frontend/src/components/BargainRequestForm.tsx",
-          "frontend/src/components/BestDealRequestButton.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/ShopkeeperProfileFormPage.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+        "summary": "Ensure cart subtotal/total display matches the same USD→INR conversion logic used for individual product prices so totals and line items are consistent.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/backendErrors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/components/AuthGate.tsx"
+          "frontend/src/pages/CartPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/backendErrors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/components/AuthGate.tsx"
+          "frontend/src/pages/CartPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AuthGate.tsx",
     "frontend/src/components/BargainRequestForm.tsx",
-    "frontend/src/components/BestDealRequestButton.tsx",
-    "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/MessagesThreadPage.tsx",
-    "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopDiscoveryPage.tsx",
-    "frontend/src/utils/backendErrors.ts",
+    "frontend/src/pages/ShopkeeperProductsPage.tsx",
+    "frontend/src/pages/ShopkeeperProfileFormPage.tsx",
+    "frontend/src/utils/currency.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
