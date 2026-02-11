@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useBrowseProductsWithShop, useCreateProduct } from '../hooks/useQueries';
+import { useBrowseProductsWithShop, useCreateProduct, useGetOwnShopProfiles, useGetBargainsByProduct, useAcceptBargain } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import AuthGate from '../components/AuthGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,178 +9,369 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Package, AlertCircle, Store, HandshakeIcon, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
-import { Plus, Package, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
+import { normalizeBackendError } from '../utils/backendErrors';
+import ProductPhotosPicker from '../components/products/ProductPhotosPicker';
+import ProductPhotoThumb from '../components/products/ProductPhotoThumb';
+import { ExternalBlob, Condition, VerificationLabel, ProductAge, ProductAgeTime } from '@/backend';
+import { getConditionLabel, getConditionBadgeVariant } from '../utils/productCondition';
 
 export default function ShopkeeperProductsPage() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: allProducts, isLoading } = useBrowseProductsWithShop();
-  const createProductMutation = useCreateProduct();
-
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    shopId: '',
-    name: '',
-    description: '',
-    price: '',
-  });
+  const [selectedShopId, setSelectedShopId] = useState<string>('');
+  const [productName, setProductName] = useState('');
+  const [productDescription, setProductDescription] = useState('');
+  const [productPrice, setProductPrice] = useState('');
+  const [photoBlobs, setPhotoBlobs] = useState<ExternalBlob[]>([]);
+  const [productCondition, setProductCondition] = useState<Condition | ''>('');
+  const [productAge, setProductAge] = useState('');
+  const [returnPolicy, setReturnPolicy] = useState('Return Available');
+  const [verifiedProduct, setVerifiedProduct] = useState(false);
+  const [qualityChecked, setQualityChecked] = useState(false);
+  const [resetToken, setResetToken] = useState(0);
 
-  // Filter products owned by current user
-  const myProducts = allProducts?.filter(product => {
-    if (!identity) return false;
-    return product.shop.owner.toString() === identity.getPrincipal().toString();
-  }) || [];
+  const { data: allProducts, isLoading: productsLoading } = useBrowseProductsWithShop();
+  const { data: ownShops, isLoading: shopsLoading } = useGetOwnShopProfiles();
+  const createProductMutation = useCreateProduct();
+  const acceptBargainMutation = useAcceptBargain();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const myProducts = allProducts?.filter(
+    (p) => p.shop.owner.toString() === identity?.getPrincipal().toString()
+  ) || [];
+
+  // Clear product age when condition changes to New
+  useEffect(() => {
+    if (productCondition === Condition.new_) {
+      setProductAge('');
+    }
+  }, [productCondition]);
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.shopId || !formData.name || !formData.description || !formData.price) {
+    if (!selectedShopId || !productName || !productDescription || !productPrice) {
       toast.error('Please fill in all fields');
       return;
     }
 
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
-      toast.error('Price must be a positive number');
+    if (!productCondition) {
+      toast.error('Please select a product condition');
       return;
+    }
+
+    const priceInPaise = Math.round(parseFloat(productPrice) * 100);
+    if (isNaN(priceInPaise) || priceInPaise <= 0) {
+      toast.error('Please enter a valid price');
+      return;
+    }
+
+    // Build verification labels array
+    const verificationLabels: VerificationLabel[] = [];
+    if (verifiedProduct) {
+      verificationLabels.push({
+        labelText: 'Verified Product',
+        description: 'This product has been verified by the seller',
+      });
+    }
+    if (qualityChecked) {
+      verificationLabels.push({
+        labelText: 'Quality Checked',
+        description: 'This product has undergone quality inspection',
+      });
+    }
+
+    // Build product age for used products
+    let age: ProductAge | null = null;
+    if (productCondition === Condition.used && productAge.trim()) {
+      age = {
+        time: { __kind__: 'unknown', unknown: null } as ProductAgeTime,
+        conditionDescription: productAge.trim(),
+      };
     }
 
     try {
       await createProductMutation.mutateAsync({
-        shopId: BigInt(formData.shopId),
-        name: formData.name,
-        description: formData.description,
-        price: BigInt(Math.round(price * 100)), // Store as cents
+        shopId: BigInt(selectedShopId),
+        name: productName,
+        description: productDescription,
+        price: BigInt(priceInPaise),
+        photoBlobs: photoBlobs.length > 0 ? photoBlobs : null,
+        condition: productCondition,
+        returnPolicy,
+        age,
+        productVerificationLabels: verificationLabels,
       });
-
       toast.success('Product created successfully!');
       setDialogOpen(false);
-      setFormData({ shopId: '', name: '', description: '', price: '' });
+      // Reset form
+      setProductName('');
+      setProductDescription('');
+      setProductPrice('');
+      setSelectedShopId('');
+      setPhotoBlobs([]);
+      setProductCondition('');
+      setProductAge('');
+      setReturnPolicy('Return Available');
+      setVerifiedProduct(false);
+      setQualityChecked(false);
+      setResetToken((prev) => prev + 1);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create product');
+      toast.error(normalizeBackendError(err));
+    }
+  };
+
+  const handleAcceptBargain = async (bargainId: bigint) => {
+    try {
+      await acceptBargainMutation.mutateAsync(bargainId);
+      toast.success('Bargain accepted! Customer can now arrange delivery.');
+    } catch (err: any) {
+      toast.error(normalizeBackendError(err));
+    }
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      // Reset form when dialog closes
+      setProductName('');
+      setProductDescription('');
+      setProductPrice('');
+      setSelectedShopId('');
+      setPhotoBlobs([]);
+      setProductCondition('');
+      setProductAge('');
+      setReturnPolicy('Return Available');
+      setVerifiedProduct(false);
+      setQualityChecked(false);
+      setResetToken((prev) => prev + 1);
     }
   };
 
   return (
-    <AuthGate message="Please sign in to manage your products">
+    <AuthGate>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-6xl mx-auto">
+          {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">My Products</h1>
-              <p className="text-muted-foreground">Manage your product listings</p>
+              <p className="text-muted-foreground">Manage your shop's product listings and bargain requests</p>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Add New Product</DialogTitle>
-                  <DialogDescription>
-                    Create a new product listing for your shop
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="shopId">Shop ID *</Label>
-                    <Input
-                      id="shopId"
-                      type="number"
-                      value={formData.shopId}
-                      onChange={(e) => setFormData({ ...formData, shopId: e.target.value })}
-                      placeholder="Enter your shop ID"
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Use the shop ID from your shop profile
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g., Wireless Headphones"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe your product..."
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Base Price ($) *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="e.g., 99.99"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-4 pt-4">
-                    <Button 
-                      type="submit" 
-                      className="flex-1"
-                      disabled={createProductMutation.isPending}
-                    >
-                      {createProductMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Creating...
-                        </>
+            <div className="flex gap-3">
+              <Button variant="outline" size="lg" onClick={() => navigate({ to: '/shopkeeper/inbox' })}>
+                <Inbox className="h-5 w-5 mr-2" />
+                Inbox
+              </Button>
+              <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+                <DialogTrigger asChild>
+                  <Button size="lg">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Product
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Product</DialogTitle>
+                    <DialogDescription>
+                      Create a new product listing for one of your shops
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleCreateProduct} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="shop">Shop</Label>
+                      {shopsLoading ? (
+                        <Skeleton className="h-10 w-full" />
+                      ) : ownShops && ownShops.length > 0 ? (
+                        <Select value={selectedShopId} onValueChange={setSelectedShopId}>
+                          <SelectTrigger id="shop">
+                            <SelectValue placeholder="Select a shop" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ownShops.map((shop) => (
+                              <SelectItem key={shop.id.toString()} value={shop.id.toString()}>
+                                {shop.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       ) : (
-                        'Create Product'
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            You need to create a shop profile first.{' '}
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto"
+                              onClick={() => navigate({ to: '/shopkeeper/profile' })}
+                            >
+                              Create Shop Profile
+                            </Button>
+                          </AlertDescription>
+                        </Alert>
                       )}
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Product Name</Label>
+                      <Input
+                        id="name"
+                        value={productName}
+                        onChange={(e) => setProductName(e.target.value)}
+                        placeholder="e.g., Fresh Tomatoes"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={productDescription}
+                        onChange={(e) => setProductDescription(e.target.value)}
+                        placeholder="Describe your product..."
+                        rows={3}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Price (₹)</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={productPrice}
+                        onChange={(e) => setProductPrice(e.target.value)}
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="condition">Condition *</Label>
+                      <Select 
+                        value={productCondition} 
+                        onValueChange={(value) => setProductCondition(value as Condition)}
+                      >
+                        <SelectTrigger id="condition">
+                          <SelectValue placeholder="Select condition" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={Condition.new_}>New</SelectItem>
+                          <SelectItem value={Condition.used}>Used</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {!productCondition && (
+                        <p className="text-sm text-muted-foreground">
+                          Please select whether this product is new or used
+                        </p>
+                      )}
+                    </div>
+
+                    {productCondition === Condition.used && (
+                      <div className="space-y-2">
+                        <Label htmlFor="productAge">Product Age (Optional)</Label>
+                        <Input
+                          id="productAge"
+                          value={productAge}
+                          onChange={(e) => setProductAge(e.target.value)}
+                          placeholder="e.g., Used for 6 months, Purchased in 2024"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Describe how long the product has been used
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="returnPolicy">Return Policy</Label>
+                      <Select value={returnPolicy} onValueChange={setReturnPolicy}>
+                        <SelectTrigger id="returnPolicy">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Return Available">Return Available</SelectItem>
+                          <SelectItem value="No Return">No Return</SelectItem>
+                          <SelectItem value="Exchange Only">Exchange Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label>Product Verification</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="verifiedProduct"
+                            checked={verifiedProduct}
+                            onCheckedChange={(checked) => setVerifiedProduct(checked === true)}
+                          />
+                          <label
+                            htmlFor="verifiedProduct"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Verified Product
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="qualityChecked"
+                            checked={qualityChecked}
+                            onCheckedChange={(checked) => setQualityChecked(checked === true)}
+                          />
+                          <label
+                            htmlFor="qualityChecked"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Quality Checked
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <ProductPhotosPicker 
+                      onPhotosChange={setPhotoBlobs} 
+                      resetToken={resetToken}
+                    />
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={createProductMutation.isPending || !ownShops || ownShops.length === 0}
+                      >
+                        {createProductMutation.isPending ? 'Creating...' : 'Create Product'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
-          {isLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Products List */}
+          {productsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-20 w-full" />
-                  </CardContent>
-                </Card>
+                <Skeleton key={i} className="h-64" />
               ))}
             </div>
           ) : myProducts.length === 0 ? (
@@ -189,44 +380,114 @@ export default function ShopkeeperProductsPage() {
                 <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Products Yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  Create your first product to start selling
+                  {ownShops && ownShops.length > 0
+                    ? 'Start by adding your first product listing'
+                    : 'Create a shop profile first, then add products'}
                 </p>
-                <Button onClick={() => setDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
+                {ownShops && ownShops.length > 0 ? (
+                  <Button onClick={() => setDialogOpen(true)}>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Your First Product
+                  </Button>
+                ) : (
+                  <Button onClick={() => navigate({ to: '/shopkeeper/profile' })}>
+                    <Store className="h-5 w-5 mr-2" />
+                    Create Shop Profile
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myProducts.map((product) => (
-                <Card 
+                <ProductCardWithBargains
                   key={product.id.toString()}
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => navigate({ to: '/product/$productId', params: { productId: product.id.toString() } })}
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="line-clamp-2">{product.name}</CardTitle>
-                      <Badge variant="secondary">
-                        {product.shop.name}
-                      </Badge>
-                    </div>
-                    <CardDescription className="line-clamp-2">
-                      {product.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatCurrency(product.price)}
-                    </p>
-                  </CardContent>
-                </Card>
+                  product={product}
+                  onAcceptBargain={handleAcceptBargain}
+                  isAccepting={acceptBargainMutation.isPending}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
     </AuthGate>
+  );
+}
+
+function ProductCardWithBargains({
+  product,
+  onAcceptBargain,
+  isAccepting,
+}: {
+  product: any;
+  onAcceptBargain: (bargainId: bigint) => void;
+  isAccepting: boolean;
+}) {
+  const { data: bargains } = useGetBargainsByProduct(product.id.toString());
+  const pendingBargains = bargains?.filter((b) => !b.mutuallyAccepted) || [];
+
+  return (
+    <Card>
+      <ProductPhotoThumb
+        photoBlobs={product.photoBlobs}
+        productName={product.name}
+        className="w-full h-48 rounded-t-lg"
+      />
+      <CardHeader>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <CardTitle className="text-lg">{product.name}</CardTitle>
+          <Badge variant={getConditionBadgeVariant(product.condition)} className="shrink-0">
+            {getConditionLabel(product.condition)}
+          </Badge>
+        </div>
+        <CardDescription className="line-clamp-2">{product.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Listed Price</p>
+            <p className="text-2xl font-bold text-primary">{formatCurrency(product.price)}</p>
+          </div>
+
+          <div>
+            <Badge variant="secondary">{product.shop.name}</Badge>
+          </div>
+
+          {pendingBargains.length > 0 && (
+            <div className="pt-4 border-t">
+              <div className="flex items-center gap-2 mb-3">
+                <HandshakeIcon className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium">
+                  {pendingBargains.length} Pending Bargain{pendingBargains.length > 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {pendingBargains.slice(0, 2).map((bargain) => (
+                  <div key={bargain.id.toString()} className="p-3 bg-muted rounded-lg space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium">Offer: {formatCurrency(bargain.desiredPrice)}</p>
+                        {bargain.note && (
+                          <p className="text-xs text-muted-foreground mt-1">{bargain.note}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => onAcceptBargain(bargain.id)}
+                      disabled={isAccepting}
+                    >
+                      {isAccepting ? 'Accepting...' : 'Accept Offer'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

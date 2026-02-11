@@ -1,46 +1,87 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:48:46.824Z",
-  "summary": "Diff focuses on improving user-facing error handling (toasts/alerts + AuthGate) and tightening several core flow UI behaviors (bargain, best deal, product detail, cart, messages). However, from the provided diff summary alone it is not possible to verify end-to-end build/deploy success or confirm that all REQ-2 flows are fully fixed end-to-end (backend + frontend) because the backend change is truncated and no build/deploy evidence is included.",
+  "generatedAt": "2026-02-11T18:15:27.309Z",
+  "summary": "Diff implements multi-photo picking UI and adds new product-related fields to backend types plus a migration module, but several details do not match the BuildRequest: return policy values are not constrained to the exact required options, the “used-product age text” is implemented as a structured type rather than free-form text, and the migration default return policy does not match the allowed UI strings. The diff also introduces additional unrelated backend features/types (messaging, delivery, listingQualityScore).",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-      "reason": "The diff shows multiple frontend/backend code changes but provides no evidence of successful builds (TypeScript/Motoko) or that the deployed app loads and renders (no CI/build logs, no config fixes shown, backend diff is truncated).",
+      "requirement": "Return policy must use exactly these user-facing options: \"Return Available\", \"No Return\", \"Exchange Only\" (and be returned in product read APIs).",
+      "reason": "Backend models use a free-form Text returnPolicy and migration sets a default string outside the allowed set; nothing in the diff shows enforcement of the exact option set.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend-file-summaries.txt (summary only; no build confirmation)"
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Store used-product age as text that can be absent/empty when not used.",
+      "reason": "Backend implements `age : ?ProductAge` with structured fields (time enum + conditionDescription) rather than a single free-form text field as requested.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
       ]
     },
     {
       "id": "REQ-2",
-      "requirement": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
-      "reason": "Frontend work for these flows is shown, but the backend implementation and end-to-end correctness cannot be confirmed from the truncated backend diff and partial frontend diffs (e.g., whether all required canister methods exist/compile and the flows complete successfully at runtime).",
+      "requirement": "Backend create/update product APIs accept and persist the new fields, and validate that used-product age is only accepted when condition is Used (reject/ignore consistently).",
+      "reason": "Frontend create mutation passes `returnPolicy`, `age`, and `productVerificationLabels`, but the diff summary does not show backend `createProduct`/`updateProduct` implementations or any validation logic enforcing the condition-based rule.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useQueries.ts (truncated)",
-        "frontend/src/pages/CartPage.tsx (truncated)",
-        "frontend/src/pages/MessagesThreadPage.tsx (truncated)",
-        "frontend/src/pages/ProductDetailPage.tsx (truncated)",
-        "frontend/src/pages/ShopDiscoveryPage.tsx (truncated)"
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Migration gives safe default values consistent with the new fields (e.g., no age, no verification labels, and a default return policy among the allowed options) and is conditional/safe for upgrades.",
+      "reason": "Migration sets `returnPolicy = \"7-day return policy (default)\"`, which is not one of the allowed return policy options; also no evidence is shown that the migration is conditional beyond always mapping products.",
+      "evidence": [
+        "backend/migration.mo"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.62,
+  "hallucinated_features": [
+    {
+      "description": "Added `listingQualityScore` field to Product and set default `?5` in migration.",
+      "reason": "Not requested in any requirement; introduces new persisted field and behavior.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "Introduced structured `ProductAge`/`ProductAgeTime` model instead of a simple free-form used-age text field.",
+      "reason": "Spec requests storing used-product age text (free-form) and validating based on condition; this is an unrequested data model change beyond the requested text field.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "Added Messaging-related types (Message) and Delivery-related types (DeliveryPartner, DeliveryOrder, etc.) in backend.",
+      "reason": "Explicit non-goals include real-time chat/notifications; these additions are unrelated to requested product age/labels/return policy/multi-image features.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Migration adds `VerificationLabel` with `description` field and sets label descriptions (implied by type).",
+      "reason": "Requirements only ask for display labels with exact text options; storing an extra description field was not requested.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    }
+  ],
+  "confidence": 0.67,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AuthGate.tsx",
-    "frontend/src/components/BargainRequestForm.tsx",
-    "frontend/src/components/BestDealRequestButton.tsx",
+    "frontend/src/components/products/ProductPhotosPicker.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/MessagesThreadPage.tsx",
     "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopDiscoveryPage.tsx",
-    "frontend/src/utils/backendErrors.ts",
+    "frontend/src/pages/ShopkeeperProductsPage.tsx",
     "project_state.json"
   ]
 }

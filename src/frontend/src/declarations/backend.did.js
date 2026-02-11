@@ -8,11 +8,46 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Time = IDL.Int;
+export const BargainRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : IDL.Text,
+  'customer' : IDL.Principal,
+  'shopkeeper' : IDL.Principal,
+  'note' : IDL.Opt(IDL.Text),
+  'productId' : IDL.Nat,
+  'desiredPrice' : IDL.Nat,
+  'timestamp' : Time,
+  'mutuallyAccepted' : IDL.Bool,
+});
+export const ProductAgeTime = IDL.Variant({
+  'days' : IDL.Nat,
+  'months' : IDL.Nat,
+  'brandNew' : IDL.Null,
+  'unknown' : IDL.Null,
+  'years' : IDL.Nat,
+});
+export const ProductAge = IDL.Record({
+  'time' : ProductAgeTime,
+  'conditionDescription' : IDL.Text,
+});
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const ShopProfile = IDL.Record({
   'id' : IDL.Nat,
   'locationUrl' : IDL.Text,
@@ -24,12 +59,23 @@ export const ShopProfile = IDL.Record({
   'priceInfo' : IDL.Text,
   'phone' : IDL.Text,
 });
+export const VerificationLabel = IDL.Record({
+  'labelText' : IDL.Text,
+  'description' : IDL.Text,
+});
+export const Condition = IDL.Variant({ 'new' : IDL.Null, 'used' : IDL.Null });
 export const ProductWithShopDetails = IDL.Record({
   'id' : IDL.Nat,
+  'age' : IDL.Opt(ProductAge),
+  'photoBlobs' : IDL.Opt(IDL.Vec(ExternalBlob)),
+  'returnPolicy' : IDL.Text,
   'name' : IDL.Text,
   'shop' : ShopProfile,
   'description' : IDL.Text,
+  'productVerificationLabels' : IDL.Vec(VerificationLabel),
   'price' : IDL.Nat,
+  'listingQualityScore' : IDL.Opt(IDL.Nat),
+  'condition' : Condition,
 });
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
@@ -40,7 +86,19 @@ export const CartItem = IDL.Record({
   'productId' : IDL.Nat,
   'quantity' : IDL.Nat,
 });
-export const Time = IDL.Int;
+export const Insurance = IDL.Record({
+  'premium' : IDL.Nat,
+  'name' : IDL.Text,
+  'details' : IDL.Text,
+  'coverageAmount' : IDL.Nat,
+});
+export const CartTotal = IDL.Record({
+  'total' : IDL.Nat,
+  'insurance' : IDL.Opt(Insurance),
+  'cartItems' : IDL.Vec(CartItem),
+  'insurancePremium' : IDL.Nat,
+  'subtotal' : IDL.Nat,
+});
 export const Message = IDL.Record({
   'id' : IDL.Nat,
   'to' : IDL.Principal,
@@ -49,18 +107,115 @@ export const Message = IDL.Record({
   'productId' : IDL.Nat,
   'timestamp' : Time,
 });
+export const DeliveryStatus = IDL.Variant({
+  'driver_pending_assignment' : IDL.Null,
+  'pending' : IDL.Null,
+  'in_transit' : IDL.Null,
+  'completed' : IDL.Null,
+  'driver_assigned' : IDL.Null,
+  'delivered' : IDL.Null,
+  'picking_up' : IDL.Null,
+  'failed' : IDL.Null,
+});
+export const DeliveryOption = IDL.Variant({
+  'pickup' : IDL.Null,
+  'delivery' : IDL.Null,
+});
+export const DeliveryOrder = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : DeliveryStatus,
+  'driverId' : IDL.Opt(IDL.Nat),
+  'completionCode' : IDL.Text,
+  'shopId' : IDL.Nat,
+  'deliveryFee' : IDL.Nat,
+  'dropoffLocation' : IDL.Text,
+  'customer' : IDL.Principal,
+  'deliveryOption' : DeliveryOption,
+  'timestamp' : Time,
+  'pickupLocation' : IDL.Text,
+});
+export const ShopkeeperAction = IDL.Variant({
+  'liked' : IDL.Null,
+  'in_cart' : IDL.Null,
+});
+export const ShopkeeperNotification = IDL.Record({
+  'action' : ShopkeeperAction,
+  'user' : IDL.Principal,
+  'productId' : IDL.Nat,
+  'timestamp' : Time,
+});
+export const Product = IDL.Record({
+  'id' : IDL.Nat,
+  'age' : IDL.Opt(ProductAge),
+  'photoBlobs' : IDL.Opt(IDL.Vec(ExternalBlob)),
+  'shopId' : IDL.Nat,
+  'returnPolicy' : IDL.Text,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'productVerificationLabels' : IDL.Vec(VerificationLabel),
+  'price' : IDL.Nat,
+  'listingQualityScore' : IDL.Opt(IDL.Nat),
+  'condition' : Condition,
+});
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'acceptBargain' : IDL.Func([IDL.Nat], [], []),
   'addToCart' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bargainsByProduct' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(BargainRequest)],
+      ['query'],
+    ),
   'browseProductsWithShop' : IDL.Func(
       [],
       [IDL.Vec(ProductWithShopDetails)],
       ['query'],
     ),
+  'calculateDeliveryFee' : IDL.Func(
+      [IDL.Nat, IDL.Float64],
+      [IDL.Nat],
+      ['query'],
+    ),
   'createProduct' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat],
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Opt(IDL.Vec(ExternalBlob)),
+        Condition,
+        IDL.Text,
+        IDL.Opt(ProductAge),
+        IDL.Vec(VerificationLabel),
+      ],
       [IDL.Nat],
       [],
     ),
@@ -69,34 +224,122 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'deleteProduct' : IDL.Func([IDL.Nat], [], []),
   'getAllShops' : IDL.Func([], [IDL.Vec(ShopProfile)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCartItems' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
+  'getCartTotalWithInsurance' : IDL.Func([], [CartTotal], ['query']),
   'getChatMessages' : IDL.Func([IDL.Nat], [IDL.Vec(Message)], ['query']),
+  'getDefaultInsuranceOptions' : IDL.Func([], [IDL.Vec(Insurance)], ['query']),
+  'getOwnDeliveryOrders' : IDL.Func([], [IDL.Vec(DeliveryOrder)], ['query']),
+  'getOwnShopProfiles' : IDL.Func([], [IDL.Vec(ShopProfile)], ['query']),
+  'getProduct' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Opt(ProductWithShopDetails)],
+      ['query'],
+    ),
+  'getProductsForShop' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ProductWithShopDetails)],
+      ['query'],
+    ),
+  'getSelectedInsurance' : IDL.Func([], [IDL.Opt(Insurance)], ['query']),
+  'getShopkeeperNotifications' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ShopkeeperNotification)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getWishlist' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+  'hasLikedProduct' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'likeProduct' : IDL.Func([IDL.Nat], [], []),
+  'recommendBestInsurance' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Opt(Insurance)],
+      ['query'],
+    ),
+  'registerDeliveryPartner' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'removeLike' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'selectInsurance' : IDL.Func([IDL.Opt(Insurance)], [], []),
   'sendBargainRequest' : IDL.Func(
       [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Text)],
       [IDL.Nat],
       [],
     ),
   'sendMessage' : IDL.Func([IDL.Principal, IDL.Text, IDL.Nat], [IDL.Nat], []),
+  'setDeliveryPartnerAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'updateProduct' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Opt(IDL.Vec(ExternalBlob)),
+        Condition,
+        IDL.Text,
+        IDL.Opt(ProductAge),
+        IDL.Vec(VerificationLabel),
+        IDL.Opt(IDL.Nat),
+      ],
+      [],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const Time = IDL.Int;
+  const BargainRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : IDL.Text,
+    'customer' : IDL.Principal,
+    'shopkeeper' : IDL.Principal,
+    'note' : IDL.Opt(IDL.Text),
+    'productId' : IDL.Nat,
+    'desiredPrice' : IDL.Nat,
+    'timestamp' : Time,
+    'mutuallyAccepted' : IDL.Bool,
+  });
+  const ProductAgeTime = IDL.Variant({
+    'days' : IDL.Nat,
+    'months' : IDL.Nat,
+    'brandNew' : IDL.Null,
+    'unknown' : IDL.Null,
+    'years' : IDL.Nat,
+  });
+  const ProductAge = IDL.Record({
+    'time' : ProductAgeTime,
+    'conditionDescription' : IDL.Text,
+  });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
   const ShopProfile = IDL.Record({
     'id' : IDL.Nat,
     'locationUrl' : IDL.Text,
@@ -108,12 +351,23 @@ export const idlFactory = ({ IDL }) => {
     'priceInfo' : IDL.Text,
     'phone' : IDL.Text,
   });
+  const VerificationLabel = IDL.Record({
+    'labelText' : IDL.Text,
+    'description' : IDL.Text,
+  });
+  const Condition = IDL.Variant({ 'new' : IDL.Null, 'used' : IDL.Null });
   const ProductWithShopDetails = IDL.Record({
     'id' : IDL.Nat,
+    'age' : IDL.Opt(ProductAge),
+    'photoBlobs' : IDL.Opt(IDL.Vec(ExternalBlob)),
+    'returnPolicy' : IDL.Text,
     'name' : IDL.Text,
     'shop' : ShopProfile,
     'description' : IDL.Text,
+    'productVerificationLabels' : IDL.Vec(VerificationLabel),
     'price' : IDL.Nat,
+    'listingQualityScore' : IDL.Opt(IDL.Nat),
+    'condition' : Condition,
   });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
@@ -121,7 +375,19 @@ export const idlFactory = ({ IDL }) => {
     'phone' : IDL.Opt(IDL.Text),
   });
   const CartItem = IDL.Record({ 'productId' : IDL.Nat, 'quantity' : IDL.Nat });
-  const Time = IDL.Int;
+  const Insurance = IDL.Record({
+    'premium' : IDL.Nat,
+    'name' : IDL.Text,
+    'details' : IDL.Text,
+    'coverageAmount' : IDL.Nat,
+  });
+  const CartTotal = IDL.Record({
+    'total' : IDL.Nat,
+    'insurance' : IDL.Opt(Insurance),
+    'cartItems' : IDL.Vec(CartItem),
+    'insurancePremium' : IDL.Nat,
+    'subtotal' : IDL.Nat,
+  });
   const Message = IDL.Record({
     'id' : IDL.Nat,
     'to' : IDL.Principal,
@@ -130,18 +396,115 @@ export const idlFactory = ({ IDL }) => {
     'productId' : IDL.Nat,
     'timestamp' : Time,
   });
+  const DeliveryStatus = IDL.Variant({
+    'driver_pending_assignment' : IDL.Null,
+    'pending' : IDL.Null,
+    'in_transit' : IDL.Null,
+    'completed' : IDL.Null,
+    'driver_assigned' : IDL.Null,
+    'delivered' : IDL.Null,
+    'picking_up' : IDL.Null,
+    'failed' : IDL.Null,
+  });
+  const DeliveryOption = IDL.Variant({
+    'pickup' : IDL.Null,
+    'delivery' : IDL.Null,
+  });
+  const DeliveryOrder = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : DeliveryStatus,
+    'driverId' : IDL.Opt(IDL.Nat),
+    'completionCode' : IDL.Text,
+    'shopId' : IDL.Nat,
+    'deliveryFee' : IDL.Nat,
+    'dropoffLocation' : IDL.Text,
+    'customer' : IDL.Principal,
+    'deliveryOption' : DeliveryOption,
+    'timestamp' : Time,
+    'pickupLocation' : IDL.Text,
+  });
+  const ShopkeeperAction = IDL.Variant({
+    'liked' : IDL.Null,
+    'in_cart' : IDL.Null,
+  });
+  const ShopkeeperNotification = IDL.Record({
+    'action' : ShopkeeperAction,
+    'user' : IDL.Principal,
+    'productId' : IDL.Nat,
+    'timestamp' : Time,
+  });
+  const Product = IDL.Record({
+    'id' : IDL.Nat,
+    'age' : IDL.Opt(ProductAge),
+    'photoBlobs' : IDL.Opt(IDL.Vec(ExternalBlob)),
+    'shopId' : IDL.Nat,
+    'returnPolicy' : IDL.Text,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'productVerificationLabels' : IDL.Vec(VerificationLabel),
+    'price' : IDL.Nat,
+    'listingQualityScore' : IDL.Opt(IDL.Nat),
+    'condition' : Condition,
+  });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'acceptBargain' : IDL.Func([IDL.Nat], [], []),
     'addToCart' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bargainsByProduct' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(BargainRequest)],
+        ['query'],
+      ),
     'browseProductsWithShop' : IDL.Func(
         [],
         [IDL.Vec(ProductWithShopDetails)],
         ['query'],
       ),
+    'calculateDeliveryFee' : IDL.Func(
+        [IDL.Nat, IDL.Float64],
+        [IDL.Nat],
+        ['query'],
+      ),
     'createProduct' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat],
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Opt(IDL.Vec(ExternalBlob)),
+          Condition,
+          IDL.Text,
+          IDL.Opt(ProductAge),
+          IDL.Vec(VerificationLabel),
+        ],
         [IDL.Nat],
         [],
       ),
@@ -158,24 +521,81 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'deleteProduct' : IDL.Func([IDL.Nat], [], []),
     'getAllShops' : IDL.Func([], [IDL.Vec(ShopProfile)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCartItems' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
+    'getCartTotalWithInsurance' : IDL.Func([], [CartTotal], ['query']),
     'getChatMessages' : IDL.Func([IDL.Nat], [IDL.Vec(Message)], ['query']),
+    'getDefaultInsuranceOptions' : IDL.Func(
+        [],
+        [IDL.Vec(Insurance)],
+        ['query'],
+      ),
+    'getOwnDeliveryOrders' : IDL.Func([], [IDL.Vec(DeliveryOrder)], ['query']),
+    'getOwnShopProfiles' : IDL.Func([], [IDL.Vec(ShopProfile)], ['query']),
+    'getProduct' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(ProductWithShopDetails)],
+        ['query'],
+      ),
+    'getProductsForShop' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ProductWithShopDetails)],
+        ['query'],
+      ),
+    'getSelectedInsurance' : IDL.Func([], [IDL.Opt(Insurance)], ['query']),
+    'getShopkeeperNotifications' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ShopkeeperNotification)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getWishlist' : IDL.Func([], [IDL.Vec(Product)], ['query']),
+    'hasLikedProduct' : IDL.Func([IDL.Nat], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'likeProduct' : IDL.Func([IDL.Nat], [], []),
+    'recommendBestInsurance' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Opt(Insurance)],
+        ['query'],
+      ),
+    'registerDeliveryPartner' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'removeLike' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'selectInsurance' : IDL.Func([IDL.Opt(Insurance)], [], []),
     'sendBargainRequest' : IDL.Func(
         [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Text)],
         [IDL.Nat],
         [],
       ),
     'sendMessage' : IDL.Func([IDL.Principal, IDL.Text, IDL.Nat], [IDL.Nat], []),
+    'setDeliveryPartnerAvailability' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'updateProduct' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Opt(IDL.Vec(ExternalBlob)),
+          Condition,
+          IDL.Text,
+          IDL.Opt(ProductAge),
+          IDL.Vec(VerificationLabel),
+          IDL.Opt(IDL.Nat),
+        ],
+        [],
+        [],
+      ),
   });
 };
 

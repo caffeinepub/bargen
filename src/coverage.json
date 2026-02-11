@@ -1,89 +1,91 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T02:48:46.862Z",
+  "generatedAt": "2026-02-11T18:15:27.311Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 6,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Make sure the existing bargaining website scaffold runs successfully end-to-end as a working model: the project must build without errors and the deployed app must load in the browser.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/hooks/useActor.ts",
-          "frontend/public/assets/generated/bargen-hero.dim_1600x600.png",
-          "frontend/public/assets/generated/bargen-logo.dim_512x512.png",
-          "frontend/src/App.tsx"
-        ],
+        "summary": "Extend the backend Product model to store used-product age text, product verification labels, and a return policy value, and include these fields anywhere products are returned to the frontend (e.g., product detail and browse listings).",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+        "summary": "Update backend create/update product APIs to accept and persist the new fields (used-product age text, product verification label(s), and return policy), applying basic validation so that product age is only accepted when condition is used.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add a conditional migration for existing product records so the new product fields have safe defaults after upgrade (do not break existing deployments/state).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Update the shopkeeper product creation UI to capture: (1) used-product age text shown only when condition is Used, (2) product verification label(s) allowing selection of \"Verified Product\" and/or \"Quality Checked\", and (3) return policy selection among \"Return Available\", \"No Return\", and \"Exchange Only\"; submit these values when creating a product.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/LoginButton.tsx",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/CartPage.tsx",
-          "frontend/src/components/BargainRequestForm.tsx",
-          "frontend/src/components/BestDealRequestButton.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/CartPage.tsx",
-          "frontend/src/components/BargainRequestForm.tsx",
-          "frontend/src/components/BestDealRequestButton.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "frontend/src/hooks/useQueries.ts"
         ]
       },
       {
-        "id": "REQ-3",
-        "summary": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+        "id": "REQ-5",
+        "summary": "Display the new product fields on the product detail page: show a Product age section for used items, show product verification badge(s)/labels, and show a Return policy section with the selected value.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/backendErrors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/components/AuthGate.tsx"
+          "frontend/src/pages/ProductDetailPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/backendErrors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "frontend/src/pages/ProductDetailPage.tsx",
-          "frontend/src/pages/MessagesThreadPage.tsx",
-          "frontend/src/components/AuthGate.tsx"
+          "frontend/src/pages/ProductDetailPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Ensure multiple image upload is supported end-to-end for product creation and product detail viewing, allowing multiple photos to be uploaded, previewed, stored, and browsed in the gallery.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/products/ProductPhotosPicker.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx",
+          "frontend/src/components/products/ProductPhotoGallery.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/products/ProductPhotosPicker.tsx",
+          "frontend/src/pages/ShopkeeperProductsPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AuthGate.tsx",
-    "frontend/src/components/BargainRequestForm.tsx",
-    "frontend/src/components/BestDealRequestButton.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/products/ProductPhotosPicker.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/MessagesThreadPage.tsx",
     "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopDiscoveryPage.tsx",
-    "frontend/src/utils/backendErrors.ts",
+    "frontend/src/pages/ShopkeeperProductsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

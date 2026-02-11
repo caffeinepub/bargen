@@ -1,30 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from '@tanstack/react-router';
-import { useGetChatMessages, useSendMessage, useGetProductDetails } from '../hooks/useQueries';
+import { useParams, useNavigate } from '@tanstack/react-router';
+import { useGetProductDetails, useGetChatMessages, useSendMessage, useGetUserProfile } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import AuthGate from '../components/AuthGate';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Send, AlertCircle, Package, User } from 'lucide-react';
 import { toast } from 'sonner';
-import { Send, MessageCircle, AlertCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { normalizeBackendError } from '../utils/backendErrors';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function MessagesThreadPage() {
   const { productId } = useParams({ from: '/messages/$productId' });
+  const navigate = useNavigate();
   const { identity } = useInternetIdentity();
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages, isLoading: messagesLoading, error: messagesError } = useGetChatMessages(productId);
   const { data: productDetails, isLoading: productLoading, error: productError } = useGetProductDetails(productId);
+  const { data: messages, isLoading: messagesLoading } = useGetChatMessages(productId);
   const sendMessageMutation = useSendMessage();
 
-  const currentUserPrincipal = identity?.getPrincipal().toString();
+  // Get participant from URL search params manually
+  const urlParams = new URLSearchParams(window.location.search);
+  const participantFromUrl = urlParams.get('participant');
+
+  // Determine the other participant
+  // If participantFromUrl is provided (shopkeeper replying), use that
+  // Otherwise, use the shop owner (customer messaging shopkeeper)
+  const otherParticipant = participantFromUrl || productDetails?.shop.owner.toString();
+
+  const { data: otherUserProfile } = useGetUserProfile(otherParticipant);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -39,134 +48,133 @@ export default function MessagesThreadPage() {
       return;
     }
 
-    if (!productDetails) {
-      toast.error('Unable to send message. Product information not available');
+    if (!otherParticipant) {
+      toast.error('Unable to determine recipient');
       return;
     }
 
     try {
       await sendMessageMutation.mutateAsync({
-        to: productDetails.shop.owner,
+        to: otherParticipant,
         content: messageText.trim(),
         productId: BigInt(productId),
       });
-
       setMessageText('');
     } catch (err: any) {
       toast.error(normalizeBackendError(err));
     }
   };
 
-  const isLoading = messagesLoading || productLoading;
-  const hasError = messagesError || productError;
+  if (productLoading || messagesLoading) {
+    return (
+      <AuthGate>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-4xl mx-auto">
+            <Skeleton className="h-12 w-3/4 mb-4" />
+            <Skeleton className="h-96" />
+          </div>
+        </div>
+      </AuthGate>
+    );
+  }
+
+  if (productError || !productDetails) {
+    return (
+      <AuthGate>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Card className="max-w-2xl mx-auto text-center py-12">
+            <CardContent>
+              <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Product Not Found</h2>
+              <p className="text-muted-foreground mb-6">
+                {productError ? normalizeBackendError(productError) : 'Unable to load product details.'}
+              </p>
+              <Button onClick={() => navigate({ to: '/' })}>
+                Back to Discovery
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AuthGate>
+    );
+  }
+
+  const { product, shop } = productDetails;
+  const otherUserName = otherUserProfile?.name || 'User';
 
   return (
-    <AuthGate message="Please log in to view messages">
+    <AuthGate>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
-          <Card className="h-[calc(100vh-12rem)] flex flex-col">
-            <CardHeader className="border-b border-border">
-              {productLoading ? (
-                <Skeleton className="h-6 w-1/2" />
-              ) : productDetails ? (
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                    {productDetails.product.name}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Chat with {productDetails.shop.name}
-                  </p>
+          <Button variant="ghost" onClick={() => navigate({ to: '/' })} className="mb-4">
+            ← Back
+          </Button>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <User className="h-6 w-6 text-primary" />
                 </div>
-              ) : (
-                <CardTitle>Messages</CardTitle>
-              )}
+                <div className="flex-1">
+                  <CardTitle>Conversation with {otherUserName}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-1">
+                    <Package className="h-4 w-4" />
+                    About: {product.name}
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
+          </Card>
 
-            {/* Messages Area */}
-            <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
-              {hasError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {normalizeBackendError(messagesError || productError)}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {isLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                      <Skeleton className="h-16 w-3/4" />
-                    </div>
-                  ))}
-                </div>
-              ) : !messages || messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
-                    <p className="text-muted-foreground">
-                      Start the conversation by sending a message
-                    </p>
+          <Card className="mb-4">
+            <CardContent className="p-6">
+              <div className="space-y-4 max-h-[500px] overflow-y-auto mb-4">
+                {!messages || messages.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No messages yet. Start the conversation!</p>
                   </div>
-                </div>
-              ) : (
-                <>
-                  {messages.map((message) => {
-                    const isOwnMessage = message.from.toString() === currentUserPrincipal;
-                    const timestamp = new Date(Number(message.timestamp) / 1000000);
+                ) : (
+                  messages.map((message) => {
+                    const isOwnMessage = message.from.toString() === identity?.getPrincipal().toString();
+                    const timeAgo = formatDistanceToNow(new Date(Number(message.timestamp) / 1000000), { addSuffix: true });
 
                     return (
                       <div
                         key={message.id.toString()}
-                        className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+                        className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                       >
-                        <Avatar className="h-8 w-8 shrink-0">
-                          <AvatarFallback className={isOwnMessage ? 'bg-primary text-primary-foreground' : 'bg-muted'}>
-                            {isOwnMessage ? 'You' : 'S'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className={`flex flex-col gap-1 max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                          <div
-                            className={`rounded-lg px-4 py-2 ${
-                              isOwnMessage
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-foreground'
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(timestamp, { addSuffix: true })}
-                          </span>
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 ${
+                            isOwnMessage
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          <p className="text-sm break-words">{message.content}</p>
+                          <p className={`text-xs mt-1 ${isOwnMessage ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                            {timeAgo}
+                          </p>
                         </div>
                       </div>
                     );
-                  })}
-                  <div ref={messagesEndRef} />
-                </>
-              )}
-            </CardContent>
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-            {/* Message Input */}
-            <div className="border-t border-border p-4">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type your message..."
-                  disabled={sendMessageMutation.isPending || !productDetails}
+                  disabled={sendMessageMutation.isPending}
                 />
-                <Button 
-                  type="submit" 
-                  disabled={!messageText.trim() || sendMessageMutation.isPending || !productDetails}
-                >
+                <Button type="submit" disabled={sendMessageMutation.isPending || !messageText.trim()}>
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
-            </div>
+            </CardContent>
           </Card>
         </div>
       </div>

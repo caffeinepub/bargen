@@ -10,7 +10,57 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BargainRequest {
+  'id' : bigint,
+  'status' : string,
+  'customer' : Principal,
+  'shopkeeper' : Principal,
+  'note' : [] | [string],
+  'productId' : bigint,
+  'desiredPrice' : bigint,
+  'timestamp' : Time,
+  'mutuallyAccepted' : boolean,
+}
 export interface CartItem { 'productId' : bigint, 'quantity' : bigint }
+export interface CartTotal {
+  'total' : bigint,
+  'insurance' : [] | [Insurance],
+  'cartItems' : Array<CartItem>,
+  'insurancePremium' : bigint,
+  'subtotal' : bigint,
+}
+export type Condition = { 'new' : null } |
+  { 'used' : null };
+export type DeliveryOption = { 'pickup' : null } |
+  { 'delivery' : null };
+export interface DeliveryOrder {
+  'id' : bigint,
+  'status' : DeliveryStatus,
+  'driverId' : [] | [bigint],
+  'completionCode' : string,
+  'shopId' : bigint,
+  'deliveryFee' : bigint,
+  'dropoffLocation' : string,
+  'customer' : Principal,
+  'deliveryOption' : DeliveryOption,
+  'timestamp' : Time,
+  'pickupLocation' : string,
+}
+export type DeliveryStatus = { 'driver_pending_assignment' : null } |
+  { 'pending' : null } |
+  { 'in_transit' : null } |
+  { 'completed' : null } |
+  { 'driver_assigned' : null } |
+  { 'delivered' : null } |
+  { 'picking_up' : null } |
+  { 'failed' : null };
+export type ExternalBlob = Uint8Array;
+export interface Insurance {
+  'premium' : bigint,
+  'name' : string,
+  'details' : string,
+  'coverageAmount' : bigint,
+}
 export interface Message {
   'id' : bigint,
   'to' : Principal,
@@ -19,12 +69,40 @@ export interface Message {
   'productId' : bigint,
   'timestamp' : Time,
 }
+export interface Product {
+  'id' : bigint,
+  'age' : [] | [ProductAge],
+  'photoBlobs' : [] | [Array<ExternalBlob>],
+  'shopId' : bigint,
+  'returnPolicy' : string,
+  'name' : string,
+  'description' : string,
+  'productVerificationLabels' : Array<VerificationLabel>,
+  'price' : bigint,
+  'listingQualityScore' : [] | [bigint],
+  'condition' : Condition,
+}
+export interface ProductAge {
+  'time' : ProductAgeTime,
+  'conditionDescription' : string,
+}
+export type ProductAgeTime = { 'days' : bigint } |
+  { 'months' : bigint } |
+  { 'brandNew' : null } |
+  { 'unknown' : null } |
+  { 'years' : bigint };
 export interface ProductWithShopDetails {
   'id' : bigint,
+  'age' : [] | [ProductAge],
+  'photoBlobs' : [] | [Array<ExternalBlob>],
+  'returnPolicy' : string,
   'name' : string,
   'shop' : ShopProfile,
   'description' : string,
+  'productVerificationLabels' : Array<VerificationLabel>,
   'price' : bigint,
+  'listingQualityScore' : [] | [bigint],
+  'condition' : Condition,
 }
 export interface ShopProfile {
   'id' : bigint,
@@ -37,6 +115,14 @@ export interface ShopProfile {
   'priceInfo' : string,
   'phone' : string,
 }
+export type ShopkeeperAction = { 'liked' : null } |
+  { 'in_cart' : null };
+export interface ShopkeeperNotification {
+  'action' : ShopkeeperAction,
+  'user' : Principal,
+  'productId' : bigint,
+  'timestamp' : Time,
+}
 export type Time = bigint;
 export interface UserProfile {
   'name' : string,
@@ -46,26 +132,107 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface VerificationLabel {
+  'labelText' : string,
+  'description' : string,
+}
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'acceptBargain' : ActorMethod<[bigint], undefined>,
   'addToCart' : ActorMethod<[bigint, bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bargainsByProduct' : ActorMethod<[bigint], Array<BargainRequest>>,
   'browseProductsWithShop' : ActorMethod<[], Array<ProductWithShopDetails>>,
-  'createProduct' : ActorMethod<[bigint, string, string, bigint], bigint>,
+  'calculateDeliveryFee' : ActorMethod<[bigint, number], bigint>,
+  'createProduct' : ActorMethod<
+    [
+      bigint,
+      string,
+      string,
+      bigint,
+      [] | [Array<ExternalBlob>],
+      Condition,
+      string,
+      [] | [ProductAge],
+      Array<VerificationLabel>,
+    ],
+    bigint
+  >,
   'createShopProfile' : ActorMethod<
     [string, bigint, string, number, string, string, string],
     bigint
   >,
+  'deleteProduct' : ActorMethod<[bigint], undefined>,
   'getAllShops' : ActorMethod<[], Array<ShopProfile>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCartItems' : ActorMethod<[], Array<CartItem>>,
+  'getCartTotalWithInsurance' : ActorMethod<[], CartTotal>,
   'getChatMessages' : ActorMethod<[bigint], Array<Message>>,
+  'getDefaultInsuranceOptions' : ActorMethod<[], Array<Insurance>>,
+  'getOwnDeliveryOrders' : ActorMethod<[], Array<DeliveryOrder>>,
+  'getOwnShopProfiles' : ActorMethod<[], Array<ShopProfile>>,
+  'getProduct' : ActorMethod<[bigint], [] | [ProductWithShopDetails]>,
+  'getProductsForShop' : ActorMethod<[bigint], Array<ProductWithShopDetails>>,
+  'getSelectedInsurance' : ActorMethod<[], [] | [Insurance]>,
+  'getShopkeeperNotifications' : ActorMethod<
+    [bigint],
+    Array<ShopkeeperNotification>
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getWishlist' : ActorMethod<[], Array<Product>>,
+  'hasLikedProduct' : ActorMethod<[bigint], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'likeProduct' : ActorMethod<[bigint], undefined>,
+  'recommendBestInsurance' : ActorMethod<[bigint], [] | [Insurance]>,
+  'registerDeliveryPartner' : ActorMethod<[string, string, string], bigint>,
+  'removeLike' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'selectInsurance' : ActorMethod<[[] | [Insurance]], undefined>,
   'sendBargainRequest' : ActorMethod<[bigint, bigint, [] | [string]], bigint>,
   'sendMessage' : ActorMethod<[Principal, string, bigint], bigint>,
+  'setDeliveryPartnerAvailability' : ActorMethod<[bigint, boolean], undefined>,
+  'updateProduct' : ActorMethod<
+    [
+      bigint,
+      string,
+      string,
+      bigint,
+      [] | [Array<ExternalBlob>],
+      Condition,
+      string,
+      [] | [ProductAge],
+      Array<VerificationLabel>,
+      [] | [bigint],
+    ],
+    undefined
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

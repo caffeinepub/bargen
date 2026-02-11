@@ -46,6 +46,19 @@ export function normalizeBackendError(error: unknown): string {
     return errorMessage; // Return the specific validation message
   }
 
+  // Check for proof upload errors
+  if (errorMessage.includes('unsupported') || errorMessage.includes('type')) {
+    return 'File type not supported. Please upload images (JPEG, PNG, GIF, WebP) or videos (MP4, MOV)';
+  }
+
+  if (errorMessage.includes('too large') || errorMessage.includes('size')) {
+    return 'File is too large. Maximum size is 10MB per file';
+  }
+
+  if (errorMessage.includes('too many')) {
+    return 'Too many files. You can upload a maximum of 5 files';
+  }
+
   // Check for actor/connection errors
   if (
     errorMessage.includes('Actor not available') ||

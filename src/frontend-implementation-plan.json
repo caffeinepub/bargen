@@ -1,130 +1,71 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Stabilize existing bargaining app scaffold to run end-to-end (frontend-only)",
+  "title": "Add used-age, verification labels, return policy, and multi-image support to product create + detail UI",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Ensure the existing app builds without frontend errors and loads the main layout in the browser.",
+      "id": "REQ-4",
+      "summary": "Extend the shopkeeper Add Product dialog to capture used-product age (Used only), verification labels, and return policy, and submit them on create.",
       "acceptanceCriteria": [
-        "Frontend builds successfully with no TypeScript errors",
-        "Backend canister builds successfully with no Motoko errors",
-        "App loads in the browser and renders the main layout (header/nav + main content)"
+        "On the Add Product dialog, when condition is set to Used, a Product age input appears; when condition is New, that input is hidden and cleared/disabled.",
+        "The Add Product dialog offers verification selection including exactly \"Verified Product\" and \"Quality Checked\" (copy matches).",
+        "The Add Product dialog offers a return policy selector with exactly: \"Return Available\", \"No Return\", \"Exchange Only\" (copy matches).",
+        "Submitting the form creates a product with these fields persisted (verified by reloading product details and seeing the same values)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "operation": "modify",
-          "description": "Fix any TypeScript-unsafe backend actor initialization calls so the project compiles cleanly (e.g., avoid relying on undeclared actor methods in the generated type surface) while preserving current behavior. Verify the component's usage instructions before implementing. (Use the authorization component guidance to keep Internet Identity session changes and cache invalidation correct.)"
-        },
-        {
-          "path": "frontend/public/assets/generated/bargen-hero.dim_1600x600.png",
-          "operation": "create",
-          "description": "Add the generated hero image asset to the exact public path referenced by the UI so the app loads without missing static assets: frontend/public/assets/generated/bargen-hero.dim_1600x600.png."
-        },
-        {
-          "path": "frontend/public/assets/generated/bargen-logo.dim_512x512.png",
-          "operation": "create",
-          "description": "Add the generated logo image asset to the exact public path referenced by the UI so the app loads without missing static assets: frontend/public/assets/generated/bargen-logo.dim_512x512.png."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Confirm routing + global providers render without runtime errors (router tree, layout, and toast provider). If any import/path issues exist, correct them without introducing new routes. Verify the component's usage instructions before implementing. (Use shadcn-ui Toaster integration already present for global notifications.)"
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Verify and fix existing core user flows (login/logout, discovery/listing, product details, cart, bargain requests incl. best-deal, and product messaging).",
-      "acceptanceCriteria": [
-        "A user can log in with Internet Identity and log out successfully",
-        "Shop discovery page loads and displays products without crashing",
-        "Product detail page loads for a selected product and shows product info",
-        "User can add a product to the cart and the cart page reflects the item",
-        "User can submit a bargain request and the action completes successfully",
-        "User can open a messages thread for a product and send a message successfully"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/LoginButton.tsx",
-          "operation": "modify",
-          "description": "Harden Internet Identity login/logout flow handling so it remains reliable (status state, retry on stale auth, and clearing cached app data on logout). Verify the component's usage instructions before implementing. (Use the authorization component guidance for logout cache clearing and login error handling.)"
-        },
-        {
-          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the discovery/product listing flow never crashes: handle query error states and safe navigation behavior when products are unavailable, while keeping the existing discovery UX and routes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ProductDetailPage.tsx",
-          "operation": "modify",
-          "description": "Stabilize product detail flow: ensure product lookup failures, backend failures, and missing/invalid productId cases are handled gracefully; keep add-to-cart, bargain request, best-deal request, and message navigation working as implemented. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the cart flow is robust: handle empty/loading/error states cleanly and prevent crashes when product lookup for cart items fails; keep AuthGate-protected access intact. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/BargainRequestForm.tsx",
-          "operation": "modify",
-          "description": "Verify bargain request submission completes successfully and provides user feedback across success/failure; ensure best-effort validation and clear failure messaging without adding new bargain features. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/BestDealRequestButton.tsx",
-          "operation": "modify",
-          "description": "Verify the 'best deal' request flow (zero-price request) completes successfully and shows a clear success/failure message, without introducing new bargaining modes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/MessagesThreadPage.tsx",
-          "operation": "modify",
-          "description": "Stabilize messages thread send/receive flow: ensure product/shop owner resolution is safe, sending failures are surfaced, and message rendering does not crash on unexpected data; keep AuthGate protection. Verify the component's usage instructions before implementing."
+          "description": "Add new Add Product form fields and state: used-product age text (conditionally shown when Condition.used), multi-select verification labels (exact strings \"Verified Product\" / \"Quality Checked\"), and return policy select (exact strings \"Return Available\" / \"No Return\" / \"Exchange Only\"). Ensure the used-age input is cleared/disabled when condition switches to New. Wire these values into the create mutation payload. Use existing shadcn-ui components (e.g., Select, Input, Label, Badge/checkbox-like controls) for consistent UI; Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Make core flow queries/mutations resilient: ensure browse/products, cart, bargain, and messaging hooks surface failures predictably (no silent failures), avoid unsafe BigInt conversions where possible, and keep cache invalidation behavior correct. Verify the component's usage instructions before implementing."
+          "description": "Update the create-product React Query mutation to accept and forward the additional createProduct arguments required by the generated backend typings (returnPolicy, age, productVerificationLabels) so the ShopkeeperProductsPage submission compiles and sends the new fields."
         }
       ]
     },
     {
-      "id": "REQ-3",
-      "summary": "Add/ensure clear English in-app error messaging for backend call failures across core flows (no silent failures).",
+      "id": "REQ-5",
+      "summary": "Show used age, verification label badges, and return policy on the product detail page with graceful handling of missing fields.",
       "acceptanceCriteria": [
-        "If an authenticated-only action is attempted while logged out, the UI shows a clear English message explaining that login is required",
-        "If any core flow API call fails, the UI shows a toast or inline error message in English"
+        "If product condition is Used and product age is present, the product detail page displays it in a clearly labeled section (English label).",
+        "If any product verification label is set, it is shown on the product detail page as badge(s)/label(s) with the exact text: \"Verified Product\" and/or \"Quality Checked\".",
+        "The product detail page shows a Return policy section that displays exactly one of: \"Return Available\", \"No Return\", \"Exchange Only\" based on stored value.",
+        "If fields are unset (e.g., older products), the page handles it gracefully without empty/awkward sections."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/backendErrors.ts",
-          "operation": "create",
-          "description": "Create a small shared helper to normalize backend/agent/react-query errors into clear English messages (e.g., unauthorized/login required, missing data, unexpected failure) for consistent UI display across core flows."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Wire standardized error normalization into core flow queries/mutations (onError handlers and/or returned error messages) so failures reliably result in a toast or inline error message instead of silent failure. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ShopDiscoveryPage.tsx",
-          "operation": "modify",
-          "description": "Add an inline, user-facing English error state (or toast) when product browsing fails so discovery does not silently fail. Verify the component's usage instructions before implementing."
-        },
-        {
           "path": "frontend/src/pages/ProductDetailPage.tsx",
           "operation": "modify",
-          "description": "Ensure backend call failures on product detail (load, add-to-cart, bargain request, best-deal request, and message navigation prerequisites) produce clear English toast/inline errors, including explicit 'login required' messaging when applicable. Verify the component's usage instructions before implementing."
+          "description": "Render new product metadata sections using English labels: (1) a \"Product age\" section only when condition is Used and the age text is present, (2) product verification label badge(s) using the exact labelText values, and (3) a \"Return policy\" section showing the stored value. Ensure sections are omitted when values are absent to avoid awkward empty UI. Use existing shadcn-ui components (e.g., Card, Badge) for presentation; Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Ensure multi-image upload, preview/removal, persistence, and multi-image gallery browsing work without regressing single/zero-photo behavior.",
+      "acceptanceCriteria": [
+        "Shopkeeper can select multiple images in the product creation flow, see previews, and remove individual images before submission.",
+        "Created products persist and display multiple photos in the product photo gallery (carousel + thumbnails) on the product detail page.",
+        "If more than one photo exists, navigation controls and thumbnails work; if zero photos exist, the existing placeholder UI remains.",
+        "No regressions to existing single-photo behavior (one image still displays correctly)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/products/ProductPhotosPicker.tsx",
+          "operation": "modify",
+          "description": "Harden the multi-image picker UX for end-to-end flows: keep the existing multi-select input, previews, and per-image removal, and add a simple parent-driven reset mechanism (e.g., resetToken prop) so previews reliably clear after successful submission or dialog close/reopen. Continue using blob-storage's ExternalBlob to represent selected images and upload progress capability; Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/MessagesThreadPage.tsx",
+          "path": "frontend/src/pages/ShopkeeperProductsPage.tsx",
           "operation": "modify",
-          "description": "Ensure message thread load/send failures surface clear English errors and do not silently fail; include 'login required' messaging where relevant. Verify the component's usage instructions before implementing."
+          "description": "Wire the ProductPhotosPicker reset mechanism from the Add Product dialog lifecycle (successful create and/or dialog close). Ensure the create flow continues to pass an array of blob-storage ExternalBlob objects for multiple images (or null when none); Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/AuthGate.tsx",
+          "path": "frontend/src/components/products/ProductPhotoGallery.tsx",
           "operation": "modify",
-          "description": "Ensure the logged-out gating screen provides a clear English explanation and remains consistent across gated pages. Verify the component's usage instructions before implementing. (Use the authorization component frontend guidance for authenticated-only UX and handling authorization traps gracefully.)"
+          "description": "Verify and adjust (if needed) the gallery behavior for 0/1/many photos: placeholder remains when no photos, single photo renders correctly, and multi-photo navigation + thumbnails remain functional using blob-storage ExternalBlob.getDirectURL for image URLs; Verify the component's usage instructions before implementing."
         }
       ]
     }

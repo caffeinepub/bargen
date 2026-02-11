@@ -2,16 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-verify-and-fix-if-needed-the-existing-core-user-flows-already-present-in-the-project-internet-identity-login-logout-shop-discovery-product-listing-product-detail-view-add-to-cart-cart-page-submit-bargain-request-including-best-deal-request-and-product-messages-thread-send-receive",
-      "featureTitle": "Verify and fix (if needed) the existing core user flows already present in the project: Internet Identity login/logout, shop discovery/product listing, product detail view, add-to-cart + cart page, submit bargain request (including best-deal request), and product messages thread send/receive.",
+      "featureId": "feature-update-the-shopkeeper-product-creation-ui-to-capture-1-used-product-age-text-shown-only-when-condition-is-used-2-product-verification-label-s-allowing-selection-of-verified-product-and-or-quality-checked-and-3-return-policy-selection-among-return-available-no-return-and-exchange-only-submit-these-values-when-creating-a-product",
+      "featureTitle": "Update the shopkeeper product creation UI to capture: (1) used-product age text shown only when condition is Used, (2) product verification label(s) allowing selection of \"Verified Product\" and/or \"Quality Checked\", and (3) return policy selection among \"Return Available\", \"No Return\", and \"Exchange Only\"; submit these values when creating a product.",
       "files": [
-        "frontend/src/components/BargainRequestForm.tsx",
-        "frontend/src/components/BestDealRequestButton.tsx",
         "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CartPage.tsx",
-        "frontend/src/pages/MessagesThreadPage.tsx",
-        "frontend/src/pages/ProductDetailPage.tsx",
-        "frontend/src/pages/ShopDiscoveryPage.tsx"
+        "frontend/src/pages/ShopkeeperProductsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,23 +14,19 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-4"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-ensure-a-clear-user-facing-in-app-error-message-in-english-for-cases-where-backend-calls-fail-e-g-not-authenticated-missing-data-or-unexpected-errors-so-the-app-does-not-silently-fail-during-the-core-flows",
-      "featureTitle": "Add/ensure a clear, user-facing in-app error message (in English) for cases where backend calls fail (e.g., not authenticated, missing data, or unexpected errors) so the app does not silently fail during the core flows.",
+      "featureId": "feature-display-the-new-product-fields-on-the-product-detail-page-show-a-product-age-section-for-used-items-show-product-verification-badge-s-labels-and-show-a-return-policy-section-with-the-selected-value",
+      "featureTitle": "Display the new product fields on the product detail page: show a Product age section for used items, show product verification badge(s)/labels, and show a Return policy section with the selected value.",
       "files": [
-        "frontend/src/components/AuthGate.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/MessagesThreadPage.tsx",
-        "frontend/src/pages/ProductDetailPage.tsx",
-        "frontend/src/pages/ShopDiscoveryPage.tsx",
-        "frontend/src/utils/backendErrors.ts"
+        "frontend/src/pages/ProductDetailPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -43,10 +34,32 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-multiple-image-upload-is-supported-end-to-end-for-product-creation-and-product-detail-viewing-allowing-multiple-photos-to-be-uploaded-previewed-stored-and-browsed-in-the-gallery",
+      "featureTitle": "Ensure multiple image upload is supported end-to-end for product creation and product detail viewing, allowing multiple photos to be uploaded, previewed, stored, and browsed in the gallery.",
+      "files": [
+        "frontend/src/components/products/ProductPhotosPicker.tsx",
+        "frontend/src/pages/ShopkeeperProductsPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

@@ -2,22 +2,23 @@ import { useState } from 'react';
 import { useSendBargainRequest } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { TrendingDown, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { normalizeBackendError } from '../utils/backendErrors';
 
 interface BargainRequestFormProps {
   productId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function BargainRequestForm({ productId }: BargainRequestFormProps) {
+export default function BargainRequestForm({ productId, open, onOpenChange }: BargainRequestFormProps) {
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [desiredPrice, setDesiredPrice] = useState('');
   const [note, setNote] = useState('');
 
@@ -45,7 +46,7 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
       });
 
       toast.success('Bargain request sent successfully!');
-      setDialogOpen(false);
+      onOpenChange(false);
       setDesiredPrice('');
       setNote('');
     } catch (err: any) {
@@ -54,13 +55,7 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" disabled={!isAuthenticated}>
-          <TrendingDown className="h-4 w-4 mr-2" />
-          Make Offer
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Make a Bargain Offer</DialogTitle>
@@ -70,7 +65,7 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="desiredPrice">Your Desired Price ($) *</Label>
+            <Label htmlFor="desiredPrice">Your Desired Price (₹) *</Label>
             <Input
               id="desiredPrice"
               type="number"
@@ -78,9 +73,12 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
               min="0.01"
               value={desiredPrice}
               onChange={(e) => setDesiredPrice(e.target.value)}
-              placeholder="e.g., 79.99"
+              placeholder="e.g., 1499.00"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Enter your offer in Indian Rupees (₹)
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -112,7 +110,7 @@ export default function BargainRequestForm({ productId }: BargainRequestFormProp
             <Button 
               type="button" 
               variant="outline"
-              onClick={() => setDialogOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
