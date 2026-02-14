@@ -1,5 +1,4 @@
 import { StrictMode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,15 +19,6 @@ import ShopkeeperNotificationsPage from './pages/ShopkeeperNotificationsPage';
 import WishlistPage from './pages/WishlistPage';
 import ReportsPage from './pages/ReportsPage';
 import AdminMonitoringPage from './pages/AdminMonitoringPage';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -165,10 +155,8 @@ export default function App() {
   return (
     <StrictMode>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-          <Toaster />
-        </QueryClientProvider>
+        <RouterProvider router={router} />
+        <Toaster />
       </ThemeProvider>
     </StrictMode>
   );

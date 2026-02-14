@@ -19,23 +19,6 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
-});
-export const Time = IDL.Int;
-export const BargainRequest = IDL.Record({
-  'id' : IDL.Nat,
-  'status' : IDL.Text,
-  'customer' : IDL.Principal,
-  'shopkeeper' : IDL.Principal,
-  'note' : IDL.Opt(IDL.Text),
-  'productId' : IDL.Nat,
-  'desiredPrice' : IDL.Nat,
-  'timestamp' : Time,
-  'mutuallyAccepted' : IDL.Bool,
-});
 export const ProductAgeTime = IDL.Variant({
   'days' : IDL.Nat,
   'months' : IDL.Nat,
@@ -76,6 +59,23 @@ export const ProductWithShopDetails = IDL.Record({
   'price' : IDL.Nat,
   'listingQualityScore' : IDL.Opt(IDL.Nat),
   'condition' : Condition,
+});
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const Time = IDL.Int;
+export const BargainRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : IDL.Text,
+  'customer' : IDL.Principal,
+  'shopkeeper' : IDL.Principal,
+  'note' : IDL.Opt(IDL.Text),
+  'productId' : IDL.Nat,
+  'desiredPrice' : IDL.Nat,
+  'timestamp' : Time,
+  'mutuallyAccepted' : IDL.Bool,
 });
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
@@ -188,6 +188,28 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'acceptBargain' : IDL.Func([IDL.Nat], [], []),
   'addToCart' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
+  'adminBrowseProductsWithShop' : IDL.Func(
+      [],
+      [IDL.Vec(ProductWithShopDetails)],
+      ['query'],
+    ),
+  'adminDeleteProduct' : IDL.Func([IDL.Nat], [], []),
+  'adminUpdateProduct' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Opt(IDL.Vec(ExternalBlob)),
+        Condition,
+        IDL.Text,
+        IDL.Opt(ProductAge),
+        IDL.Vec(VerificationLabel),
+        IDL.Opt(IDL.Nat),
+      ],
+      [],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bargainsByProduct' : IDL.Func(
       [IDL.Nat],
@@ -311,23 +333,6 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
-  });
-  const Time = IDL.Int;
-  const BargainRequest = IDL.Record({
-    'id' : IDL.Nat,
-    'status' : IDL.Text,
-    'customer' : IDL.Principal,
-    'shopkeeper' : IDL.Principal,
-    'note' : IDL.Opt(IDL.Text),
-    'productId' : IDL.Nat,
-    'desiredPrice' : IDL.Nat,
-    'timestamp' : Time,
-    'mutuallyAccepted' : IDL.Bool,
-  });
   const ProductAgeTime = IDL.Variant({
     'days' : IDL.Nat,
     'months' : IDL.Nat,
@@ -368,6 +373,23 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Nat,
     'listingQualityScore' : IDL.Opt(IDL.Nat),
     'condition' : Condition,
+  });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const Time = IDL.Int;
+  const BargainRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : IDL.Text,
+    'customer' : IDL.Principal,
+    'shopkeeper' : IDL.Principal,
+    'note' : IDL.Opt(IDL.Text),
+    'productId' : IDL.Nat,
+    'desiredPrice' : IDL.Nat,
+    'timestamp' : Time,
+    'mutuallyAccepted' : IDL.Bool,
   });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
@@ -477,6 +499,28 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'acceptBargain' : IDL.Func([IDL.Nat], [], []),
     'addToCart' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
+    'adminBrowseProductsWithShop' : IDL.Func(
+        [],
+        [IDL.Vec(ProductWithShopDetails)],
+        ['query'],
+      ),
+    'adminDeleteProduct' : IDL.Func([IDL.Nat], [], []),
+    'adminUpdateProduct' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Opt(IDL.Vec(ExternalBlob)),
+          Condition,
+          IDL.Text,
+          IDL.Opt(ProductAge),
+          IDL.Vec(VerificationLabel),
+          IDL.Opt(IDL.Nat),
+        ],
+        [],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'bargainsByProduct' : IDL.Func(
         [IDL.Nat],

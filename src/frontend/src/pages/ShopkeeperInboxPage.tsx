@@ -10,6 +10,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MessageCircle, User, Package, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
+// Define thread type since backend doesn't have this endpoint yet
+interface ChatThread {
+  productId: bigint;
+  productName: string;
+  otherParticipant: string;
+  lastMessagePreview?: string;
+  lastMessageTime?: bigint;
+}
+
 export default function ShopkeeperInboxPage() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
@@ -49,7 +58,7 @@ export default function ShopkeeperInboxPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {threads.map((thread) => (
+              {(threads as ChatThread[]).map((thread) => (
                 <ThreadCard key={`${thread.productId}-${thread.otherParticipant}`} thread={thread} />
               ))}
             </div>
@@ -60,7 +69,7 @@ export default function ShopkeeperInboxPage() {
   );
 }
 
-function ThreadCard({ thread }: { thread: any }) {
+function ThreadCard({ thread }: { thread: ChatThread }) {
   const navigate = useNavigate();
   const { data: userProfile } = useGetUserProfile(thread.otherParticipant);
 

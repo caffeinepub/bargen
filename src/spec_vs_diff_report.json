@@ -1,87 +1,73 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T18:15:27.309Z",
-  "summary": "Diff implements multi-photo picking UI and adds new product-related fields to backend types plus a migration module, but several details do not match the BuildRequest: return policy values are not constrained to the exact required options, the “used-product age text” is implemented as a structured type rather than free-form text, and the migration default return policy does not match the allowed UI strings. The diff also introduces additional unrelated backend features/types (messaging, delivery, listingQualityScore).",
+  "generatedAt": "2026-02-13T05:54:50.576Z",
+  "summary": "The diff does not implement an actual “publish current draft to live (non-expiring) deployment” mechanism; it mostly adds a deployment guide document and includes substantial unrelated backend/frontend feature work and UI changes that go beyond the publishing-only scope.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Return policy must use exactly these user-facing options: \"Return Available\", \"No Return\", \"Exchange Only\" (and be returned in product read APIs).",
-      "reason": "Backend models use a free-form Text returnPolicy and migration sets a default string outside the allowed set; nothing in the diff shows enforcement of the exact option set.",
+      "requirement": "Publish the currently deployed draft of the application to a live (non-expiring) deployment so it remains accessible without requiring a rebuild.",
+      "reason": "No concrete deployment configuration/automation or release artifact changes are shown—only documentation. There’s no evidence in the diff of creating a live deployment from the current project state (e.g., CI/CD, dfx.json/network config, canister ID management, or scripts) that would ensure a non-expiring live deployment without rebuilding.",
       "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo"
+        "frontend/DEPLOYMENT.md"
       ]
     },
     {
       "id": "REQ-1",
-      "requirement": "Store used-product age as text that can be absent/empty when not used.",
-      "reason": "Backend implements `age : ?ProductAge` with structured fields (time enum + conditionDescription) rather than a single free-form text field as requested.",
+      "requirement": "Published app is reachable via its live URL and loads the main route ('/').",
+      "reason": "The diff cannot demonstrate reachability or successful load of the live URL; it only adds a doc with manual verification steps. No deployment output, URL, or configuration changes are present that would enable/guarantee live route availability.",
+      "evidence": [
+        "frontend/DEPLOYMENT.md",
+        "frontend/src/App.tsx"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Backend canister calls function as they did in the draft deployment (no regressions introduced by publishing).",
+      "reason": "There is no deployment-oriented change demonstrating preserved canister IDs/endpoints for live, and the backend file shows large functional/type additions that could affect behavior (potential regressions) rather than a publishing-only change.",
       "evidence": [
         "backend/main.mo",
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "Backend create/update product APIs accept and persist the new fields, and validate that used-product age is only accepted when condition is Used (reject/ignore consistently).",
-      "reason": "Frontend create mutation passes `returnPolicy`, `age`, and `productVerificationLabels`, but the diff summary does not show backend `createProduct`/`updateProduct` implementations or any validation logic enforcing the condition-based rule.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Migration gives safe default values consistent with the new fields (e.g., no age, no verification labels, and a default return policy among the allowed options) and is conditional/safe for upgrades.",
-      "reason": "Migration sets `returnPolicy = \"7-day return policy (default)\"`, which is not one of the allowed return policy options; also no evidence is shown that the migration is conditional beyond always mapping products.",
-      "evidence": [
-        "backend/migration.mo"
+        "frontend/DEPLOYMENT.md"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added `listingQualityScore` field to Product and set default `?5` in migration.",
-      "reason": "Not requested in any requirement; introduces new persisted field and behavior.",
-      "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "description": "Introduced structured `ProductAge`/`ProductAgeTime` model instead of a simple free-form used-age text field.",
-      "reason": "Spec requests storing used-product age text (free-form) and validating based on condition; this is an unrequested data model change beyond the requested text field.",
-      "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "description": "Added Messaging-related types (Message) and Delivery-related types (DeliveryPartner, DeliveryOrder, etc.) in backend.",
-      "reason": "Explicit non-goals include real-time chat/notifications; these additions are unrelated to requested product age/labels/return policy/multi-image features.",
+      "description": "Large expansion/changes to backend domain model and functionality (e.g., messaging, delivery, bargains, claims types) unrelated to publishing to live.",
+      "reason": "BuildRequest explicitly states the goal is publishing and the non-goal is implementing new features or changing UI/UX beyond what’s required to publish; these additions appear to be new product features.",
       "evidence": [
         "backend/main.mo"
       ]
     },
     {
-      "description": "Migration adds `VerificationLabel` with `description` field and sets label descriptions (implied by type).",
-      "reason": "Requirements only ask for display labels with exact text options; storing an extra description field was not requested.",
+      "description": "Major frontend routing and page surface area (wishlist, reports, admin, claims flows, delivery, partner dashboard, shopkeeper pages, messaging thread pages).",
+      "reason": "Not requested by REQ-1 (publishing). These are new/expanded app features rather than deployment changes.",
       "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo"
+        "frontend/src/App.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Frontend feature implementations and UI/UX changes (auth gate/login prompt, updated header navigation items, cart claim navigation change, product discovery filtering/sorting, product detail enhancements, shopkeeper dashboards, messaging polling, admin hooks, new styling palette).",
+      "reason": "Not requested; violates the non-goal of adding features or altering UI/UX beyond what’s required to publish.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Added a deployment guide telling users to run `dfx deploy --network ic` and manual smoke tests.",
+      "reason": "REQ-1 asks to publish the currently deployed draft to live without requiring a rebuild; a generic redeploy command plus manual checks is not explicitly requested as a deliverable and suggests rebuilding/redeploying rather than promoting an existing draft deployment.",
+      "evidence": [
+        "frontend/DEPLOYMENT.md"
       ]
     }
   ],
-  "confidence": 0.67,
+  "confidence": 0.74,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/products/ProductPhotosPicker.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopkeeperProductsPage.tsx",
+    "frontend/DEPLOYMENT.md",
+    "frontend/src/App.tsx",
     "project_state.json"
   ]
 }

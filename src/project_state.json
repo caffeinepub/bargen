@@ -1,87 +1,22 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Product listing enhancements for used items: product age, verification badge, return policy display, and multi-image uploads.",
+  "summary": "New project",
   "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-shopkeeper-product-creation-ui-to-capture-1-used-product-age-text-shown-only-when-condition-is-used-2-product-verification-label-s-allowing-selection-of-verified-product-and-or-quality-checked-and-3-return-policy-selection-among-return-available-no-return-and-exchange-only-submit-these-values-when-creating-a-product",
-      "title": "Update the shopkeeper product creation UI to capture: (1) used-product age text shown only when condition is Used, (2) product verification label(s) allowing selection of \"Verified Product\" and/or \"Quality Checked\", and (3) return policy selection among \"Return Available\", \"No Return\", and \"Exchange Only\"; submit these values when creating a product.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-display-the-new-product-fields-on-the-product-detail-page-show-a-product-age-section-for-used-items-show-product-verification-badge-s-labels-and-show-a-return-policy-section-with-the-selected-value",
-      "title": "Display the new product fields on the product detail page: show a Product age section for used items, show product verification badge(s)/labels, and show a Return policy section with the selected value.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-multiple-image-upload-is-supported-end-to-end-for-product-creation-and-product-detail-viewing-allowing-multiple-photos-to-be-uploaded-previewed-stored-and-browsed-in-the-gallery",
-      "title": "Ensure multiple image upload is supported end-to-end for product creation and product detail viewing, allowing multiple photos to be uploaded, previewed, stored, and browsed in the gallery.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    }
-  ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Add product age field for used items (e.g., \"Used for 6 months\", \"Purchased in 2024\")",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Add product verification badge/labels (e.g., \"Verified Product\", \"Quality Checked\")",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add return policy section with display options: Return Available / No Return / Exchange Only",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Support uploading multiple images per product (especially for used items to show condition)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Extend the backend Product model to store used-product age text, product verification labels, and a return policy value, and include these fields anywhere products are returned to the frontend (e.g., product detail and browse listings).",
+      "id": "feature-publish-the-currently-deployed-draft-of-the-application-to-a-live-non-expiring-deployment-so-it-remains-accessible-without-requiring-a-rebuild",
+      "title": "Publish the currently deployed draft of the application to a live (non-expiring) deployment so it remains accessible without requiring a rebuild.",
       "reqIds": [
         "REQ-1"
       ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Update backend create/update product APIs to accept and persist the new fields (used-product age text, product verification label(s), and return policy), applying basic validation so that product age is only accepted when condition is used.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Add a conditional migration for existing product records so the new product fields have safe defaults after upgrade (do not break existing deployments/state).",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
+      "version": 1
     }
   ],
-  "projectName": "Add used-product age, product verification labels, return policy, and ensure multi-image uploads",
+  "new_feature_requests": [],
+  "projectName": "Publish the current app to live",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

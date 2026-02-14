@@ -1,10 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { useInternetIdentity } from './useInternetIdentity';
-import { Principal } from '@icp-sdk/core/principal';
-import { ExternalBlob, DeliveryOption, DeliveryStatus, Condition, VerificationLabel, ProductAge } from '@/backend';
-import { toast } from 'sonner';
-import { normalizeBackendError } from '../utils/backendErrors';
+import { Condition, VerificationLabel, ProductAge } from '@/backend';
 
 // === Product Queries ===
 export function useBrowseProductsWithShop() {
@@ -20,31 +16,31 @@ export function useBrowseProductsWithShop() {
   });
 }
 
-export function useGetProductDetails(productId: string) {
+export function useGetProduct(productId: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
       if (!actor) return null;
-      const product = await actor.getProduct(BigInt(productId));
-      if (!product) return null;
-      return {
-        product,
-        shop: product.shop,
-      };
+      return actor.getProduct(BigInt(productId));
     },
     enabled: !!actor && !isFetching && !!productId,
   });
 }
 
-export function useGetProductsForShop(shopId: string | null) {
+// Alias for compatibility
+export function useGetProductDetails(productId: string) {
+  return useGetProduct(productId);
+}
+
+export function useGetProductsForShop(shopId: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
-    queryKey: ['shopProducts', shopId],
+    queryKey: ['products', 'shop', shopId],
     queryFn: async () => {
-      if (!actor || !shopId) return [];
+      if (!actor) return [];
       return actor.getProductsForShop(BigInt(shopId));
     },
     enabled: !!actor && !isFetching && !!shopId,
@@ -54,7 +50,6 @@ export function useGetProductsForShop(shopId: string | null) {
 // === Shop Queries ===
 export function useGetOwnShopProfiles() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
     queryKey: ['ownShops'],
@@ -62,25 +57,16 @@ export function useGetOwnShopProfiles() {
       if (!actor) return [];
       return actor.getOwnShopProfiles();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
-// === Shop Mutations ===
 export function useCreateShopProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      name,
-      rating,
-      address,
-      distance,
-      priceInfo,
-      phone,
-      locationUrl,
-    }: {
+    mutationFn: async (data: {
       name: string;
       rating: bigint;
       address: string;
@@ -90,7 +76,15 @@ export function useCreateShopProfile() {
       locationUrl: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createShopProfile(name, rating, address, distance, priceInfo, phone, locationUrl);
+      return actor.createShopProfile(
+        data.name,
+        data.rating,
+        data.address,
+        data.distance,
+        data.priceInfo,
+        data.phone,
+        data.locationUrl
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ownShops'] });
@@ -104,22 +98,12 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      shopId,
-      name,
-      description,
-      price,
-      photoBlobs,
-      condition,
-      returnPolicy,
-      age,
-      productVerificationLabels,
-    }: {
+    mutationFn: async (data: {
       shopId: bigint;
       name: string;
       description: string;
       price: bigint;
-      photoBlobs?: ExternalBlob[] | null;
+      photoBlobs: any;
       condition: Condition;
       returnPolicy: string;
       age: ProductAge | null;
@@ -127,20 +111,141 @@ export function useCreateProduct() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createProduct(
-        shopId,
-        name,
-        description,
-        price,
-        photoBlobs || null,
-        condition,
-        returnPolicy,
-        age,
-        productVerificationLabels
+        data.shopId,
+        data.name,
+        data.description,
+        data.price,
+        data.photoBlobs,
+        data.condition,
+        data.returnPolicy,
+        data.age,
+        data.productVerificationLabels
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['ownShops'] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: bigint;
+      name: string;
+      description: string;
+      price: bigint;
+      photoBlobs: any;
+      condition: Condition;
+      returnPolicy: string;
+      age: ProductAge | null;
+      productVerificationLabels: VerificationLabel[];
+      listingQualityScore: bigint | null;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateProduct(
+        data.productId,
+        data.name,
+        data.description,
+        data.price,
+        data.photoBlobs,
+        data.condition,
+        data.returnPolicy,
+        data.age,
+        data.productVerificationLabels,
+        data.listingQualityScore
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteProduct(productId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+// === Admin Product Management ===
+export function useAdminBrowseProductsWithShop() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['adminProducts'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.adminBrowseProductsWithShop();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAdminUpdateProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: bigint;
+      name: string;
+      description: string;
+      price: bigint;
+      photoBlobs: any;
+      condition: Condition;
+      returnPolicy: string;
+      age: ProductAge | null;
+      productVerificationLabels: VerificationLabel[];
+      listingQualityScore: bigint | null;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.adminUpdateProduct(
+        data.productId,
+        data.name,
+        data.description,
+        data.price,
+        data.photoBlobs,
+        data.condition,
+        data.returnPolicy,
+        data.age,
+        data.productVerificationLabels,
+        data.listingQualityScore
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product', variables.productId.toString()] });
+    },
+  });
+}
+
+export function useAdminDeleteProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.adminDeleteProduct(productId);
+    },
+    onSuccess: (_, productId) => {
+      queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product', productId.toString()] });
     },
   });
 }
@@ -148,99 +253,48 @@ export function useCreateProduct() {
 // === Cart Queries ===
 export function useGetCartItems() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
-    queryKey: ['cartItems'],
+    queryKey: ['cart'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getCartItems();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
-
-export function useGetCartTotalWithInsurance() {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['cartTotal'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getCartTotalWithInsurance();
-    },
-    enabled: !!actor && !isFetching && !!identity,
-  });
-}
-
-// Alias for backward compatibility
-export const useGetCartTotal = useGetCartTotalWithInsurance;
 
 export function useAddToCart() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: bigint; quantity: bigint }) => {
+    mutationFn: async (data: { productId: bigint; quantity: bigint }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.addToCart(productId, quantity);
+      return actor.addToCart(data.productId, data.quantity);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cartItems'] });
-      queryClient.invalidateQueries({ queryKey: ['cartTotal'] });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
 
-// === Insurance Queries ===
-export function useGetDefaultInsuranceOptions() {
+export function useGetCartTotalWithInsurance() {
   const { actor, isFetching } = useActor();
 
   return useQuery({
-    queryKey: ['insuranceOptions'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getDefaultInsuranceOptions();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetSelectedInsurance() {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['selectedInsurance'],
+    queryKey: ['cartTotal'],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getSelectedInsurance();
+      return actor.getCartTotalWithInsurance();
     },
-    enabled: !!actor && !isFetching && !!identity,
-  });
-}
-
-export function useSelectInsurance() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (insurance: any) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.selectInsurance(insurance);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['selectedInsurance'] });
-      queryClient.invalidateQueries({ queryKey: ['cartTotal'] });
-    },
+    enabled: !!actor && !isFetching,
   });
 }
 
 // === Bargain Queries ===
 export function useGetBargainsByProduct(productId: string) {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
     queryKey: ['bargains', productId],
@@ -248,8 +302,7 @@ export function useGetBargainsByProduct(productId: string) {
       if (!actor) return [];
       return actor.bargainsByProduct(BigInt(productId));
     },
-    enabled: !!actor && !isFetching && !!identity && !!productId,
-    refetchInterval: 5000,
+    enabled: !!actor && !isFetching && !!productId,
   });
 }
 
@@ -258,17 +311,13 @@ export function useSendBargainRequest() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      productId,
-      desiredPrice,
-      note,
-    }: {
+    mutationFn: async (data: {
       productId: bigint;
       desiredPrice: bigint;
       note: string | null;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.sendBargainRequest(productId, desiredPrice, note);
+      return actor.sendBargainRequest(data.productId, data.desiredPrice, data.note);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['bargains', variables.productId.toString()] });
@@ -294,7 +343,6 @@ export function useAcceptBargain() {
 // === Messaging Queries ===
 export function useGetChatMessages(productId: string) {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
     queryKey: ['messages', productId],
@@ -302,8 +350,8 @@ export function useGetChatMessages(productId: string) {
       if (!actor) return [];
       return actor.getChatMessages(BigInt(productId));
     },
-    enabled: !!actor && !isFetching && !!identity && !!productId,
-    refetchInterval: 3000,
+    enabled: !!actor && !isFetching && !!productId,
+    refetchInterval: 5000, // Poll every 5 seconds
   });
 }
 
@@ -312,81 +360,158 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ to, content, productId }: { to: string; content: string; productId: bigint }) => {
+    mutationFn: async (data: { to: any; content: string; productId: bigint }) => {
       if (!actor) throw new Error('Actor not available');
-      const toPrincipal = Principal.fromText(to);
-      return actor.sendMessage(toPrincipal, content, productId);
+      return actor.sendMessage(data.to, data.content, data.productId);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['messages', variables.productId.toString()] });
-      queryClient.invalidateQueries({ queryKey: ['shopkeeperThreads'] });
     },
   });
 }
 
-// === Shopkeeper Chat Threads ===
+// Placeholder for shopkeeper chat threads (not in backend yet)
 export function useGetShopkeeperChatThreads() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-  const { data: ownShops } = useGetOwnShopProfiles();
-  const { data: allProducts } = useBrowseProductsWithShop();
 
   return useQuery({
-    queryKey: ['shopkeeperThreads'],
+    queryKey: ['chatThreads'],
     queryFn: async () => {
-      if (!actor || !ownShops || ownShops.length === 0 || !allProducts) return [];
-
-      const myShopIds = ownShops.map((s) => s.id.toString());
-      const myProducts = allProducts.filter((p) => myShopIds.includes(p.shop.id.toString()));
-
-      const threadsMap = new Map<string, any>();
-
-      for (const product of myProducts) {
-        const messages = await actor.getChatMessages(product.id);
-        
-        for (const message of messages) {
-          const otherParticipant = message.from.toString() === identity?.getPrincipal().toString()
-            ? message.to.toString()
-            : message.from.toString();
-
-          const threadKey = `${product.id}-${otherParticipant}`;
-
-          if (!threadsMap.has(threadKey) || message.timestamp > threadsMap.get(threadKey).lastMessageTime) {
-            threadsMap.set(threadKey, {
-              productId: product.id,
-              productName: product.name,
-              otherParticipant,
-              lastMessagePreview: message.content,
-              lastMessageTime: message.timestamp,
-            });
-          }
-        }
-      }
-
-      return Array.from(threadsMap.values()).sort((a, b) => 
-        Number(b.lastMessageTime - a.lastMessageTime)
-      );
+      // Backend doesn't have this endpoint yet, return empty array
+      return [];
     },
-    enabled: !!actor && !isFetching && !!identity && !!ownShops && !!allProducts,
-    refetchInterval: 5000,
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// === Wishlist Queries ===
+export function useGetWishlist() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['wishlist'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getWishlist();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useHasLikedProduct(productId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['liked', productId],
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.hasLikedProduct(BigInt(productId));
+    },
+    enabled: !!actor && !isFetching && !!productId,
+  });
+}
+
+// Alias for compatibility
+export function useGetProductLikeStatus(productId: string) {
+  return useHasLikedProduct(productId);
+}
+
+export function useLikeProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.likeProduct(productId);
+    },
+    onSuccess: (_, productId) => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['liked', productId.toString()] });
+    },
+  });
+}
+
+export function useRemoveLike() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.removeLike(productId);
+    },
+    onSuccess: (_, productId) => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['liked', productId.toString()] });
+    },
+  });
+}
+
+// Alias for compatibility
+export function useUnlikeProduct() {
+  return useRemoveLike();
+}
+
+// === Insurance Queries ===
+export function useGetDefaultInsuranceOptions() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['insuranceOptions'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getDefaultInsuranceOptions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetSelectedInsurance() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['selectedInsurance'],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getSelectedInsurance();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSelectInsurance() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (insurance: any) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.selectInsurance(insurance);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['selectedInsurance'] });
+      queryClient.invalidateQueries({ queryKey: ['cartTotal'] });
+    },
+  });
+}
+
+// === Shopkeeper Notifications ===
+export function useGetShopkeeperNotifications(shopId: string | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['notifications', shopId],
+    queryFn: async () => {
+      if (!actor || !shopId) return [];
+      return actor.getShopkeeperNotifications(BigInt(shopId));
+    },
+    enabled: !!actor && !isFetching && !!shopId,
+    refetchInterval: 10000, // Poll every 10 seconds
   });
 }
 
 // === User Profile Queries ===
-export function useGetUserProfile(principalString: string | undefined) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery({
-    queryKey: ['userProfile', principalString],
-    queryFn: async () => {
-      if (!actor || !principalString) return null;
-      const principal = Principal.fromText(principalString);
-      return actor.getUserProfile(principal);
-    },
-    enabled: !!actor && !isFetching && !!principalString,
-  });
-}
-
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -407,6 +532,19 @@ export function useGetCallerUserProfile() {
   };
 }
 
+export function useGetUserProfile(user: any) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['userProfile', user?.toString()],
+    queryFn: async () => {
+      if (!actor || !user) return null;
+      return actor.getUserProfile(user);
+    },
+    enabled: !!actor && !isFetching && !!user,
+  });
+}
+
 export function useSaveCallerUserProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -423,278 +561,91 @@ export function useSaveCallerUserProfile() {
 }
 
 // === Admin Queries ===
-export function useIsCallerAdmin() {
+export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
-    queryKey: ['isCallerAdmin'],
+    queryKey: ['userRole'],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getCallerUserRole();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useIsCallerAdmin() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['isAdmin'],
     queryFn: async () => {
       if (!actor) return false;
       return actor.isCallerAdmin();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
-// === Claims Queries (Placeholder - backend not implemented) ===
+// === Claims (Placeholder - backend not implemented) ===
 export function useGetOwnClaims() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
-    queryKey: ['ownClaims'],
+    queryKey: ['claims'],
     queryFn: async () => {
-      if (!actor) return [];
-      // Backend method not yet implemented
+      // Backend doesn't have this endpoint yet, return empty array
       return [];
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
-export function useFileClaim() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      productId,
-      reason,
-      details,
-      claimType,
-      shortDescription,
-    }: {
-      productId: bigint | null;
-      reason: string;
-      details: string;
-      claimType: string | null;
-      shortDescription: string | null;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Claims backend not yet implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ownClaims'] });
-    },
-  });
-}
-
-export function useUploadClaimProof() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async ({ claimId, externalBlob }: { claimId: bigint; externalBlob: ExternalBlob }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Claims backend not yet implemented');
-    },
-  });
-}
-
-// === Delivery Queries (Placeholder - backend not fully implemented) ===
-export function useGetOwnDeliveryOrders() {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['ownDeliveryOrders'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getOwnDeliveryOrders();
-    },
-    enabled: !!actor && !isFetching && !!identity,
-  });
-}
-
-export function useGetDeliveryOrderDetails(orderId: string | null) {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['deliveryOrder', orderId],
-    queryFn: async () => {
-      if (!actor || !orderId) return null;
-      // Backend method not yet implemented - return mock data
-      return null;
-    },
-    enabled: !!actor && !isFetching && !!identity && !!orderId,
-    refetchInterval: 5000,
-  });
-}
-
-export function useCreateDeliveryOrder() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      shopId,
-      dropoffLocation,
-      deliveryOption,
-    }: {
-      shopId: bigint;
-      dropoffLocation: string;
-      deliveryOption: DeliveryOption;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Delivery backend not yet implemented');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ownDeliveryOrders'] });
-    },
-  });
-}
-
-export function useUpdateDeliveryStatus() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ orderId, newStatus }: { orderId: bigint; newStatus: DeliveryStatus }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Delivery backend not yet implemented');
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['deliveryOrder', variables.orderId.toString()] });
-      queryClient.invalidateQueries({ queryKey: ['ownDeliveryOrders'] });
-    },
-  });
-}
-
-export function useCompleteDeliveryWithOTP() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ orderId, otp }: { orderId: bigint; otp: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method not yet implemented
-      throw new Error('Delivery backend not yet implemented');
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['deliveryOrder', variables.orderId.toString()] });
-      queryClient.invalidateQueries({ queryKey: ['ownDeliveryOrders'] });
-    },
-  });
-}
-
-// === Delivery Partner Mutations ===
+// === Delivery Partner Queries ===
 export function useRegisterDeliveryPartner() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      name,
-      vehicleType,
-      location,
-    }: {
-      name: string;
-      vehicleType: string;
-      location: string;
-    }) => {
+    mutationFn: async (data: { name: string; vehicleType: string; location: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.registerDeliveryPartner(name, vehicleType, location);
+      return actor.registerDeliveryPartner(data.name, data.vehicleType, data.location);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deliveryPartners'] });
+      queryClient.invalidateQueries({ queryKey: ['deliveryOrders'] });
     },
   });
 }
 
-export function useSetPartnerAvailability() {
+export function useSetDeliveryPartnerAvailability() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ partnerId, isAvailable }: { partnerId: bigint; isAvailable: boolean }) => {
+    mutationFn: async (data: { partnerId: bigint; isAvailable: boolean }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.setDeliveryPartnerAvailability(partnerId, isAvailable);
+      return actor.setDeliveryPartnerAvailability(data.partnerId, data.isAvailable);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deliveryPartners'] });
+      queryClient.invalidateQueries({ queryKey: ['deliveryOrders'] });
     },
   });
 }
 
-// === Shopkeeper Notifications ===
-export function useGetShopkeeperNotifications(shopId: string | null) {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['shopkeeperNotifications', shopId],
-    queryFn: async () => {
-      if (!actor || !shopId) return [];
-      return actor.getShopkeeperNotifications(BigInt(shopId));
-    },
-    enabled: !!actor && !isFetching && !!identity && !!shopId,
-    refetchInterval: 5000,
-  });
+// Alias for compatibility
+export function useSetPartnerAvailability() {
+  return useSetDeliveryPartnerAvailability();
 }
 
-// === Wishlist Queries ===
-export function useGetWishlist() {
+export function useGetOwnDeliveryOrders() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   return useQuery({
-    queryKey: ['wishlist'],
+    queryKey: ['deliveryOrders'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getWishlist();
+      return actor.getOwnDeliveryOrders();
     },
-    enabled: !!actor && !isFetching && !!identity,
-  });
-}
-
-export function useGetProductLikeStatus(productId: string) {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  return useQuery({
-    queryKey: ['productLikeStatus', productId],
-    queryFn: async () => {
-      if (!actor) return { isLiked: false };
-      const isLiked = await actor.hasLikedProduct(BigInt(productId));
-      return { isLiked };
-    },
-    enabled: !!actor && !isFetching && !!identity && !!productId,
-  });
-}
-
-export function useLikeProduct() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (productId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.likeProduct(productId);
-    },
-    onSuccess: (_, productId) => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      queryClient.invalidateQueries({ queryKey: ['productLikeStatus', productId.toString()] });
-    },
-  });
-}
-
-export function useUnlikeProduct() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (productId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.removeLike(productId);
-    },
-    onSuccess: (_, productId) => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      queryClient.invalidateQueries({ queryKey: ['productLikeStatus', productId.toString()] });
-    },
+    enabled: !!actor && !isFetching,
   });
 }

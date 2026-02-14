@@ -166,6 +166,9 @@ export enum UserRole {
 export interface backendInterface {
     acceptBargain(bargainId: bigint): Promise<void>;
     addToCart(productId: bigint, quantity: bigint): Promise<void>;
+    adminBrowseProductsWithShop(): Promise<Array<ProductWithShopDetails>>;
+    adminDeleteProduct(productId: bigint): Promise<void>;
+    adminUpdateProduct(productId: bigint, name: string, description: string, price: bigint, photoBlobs: Array<ExternalBlob> | null, condition: Condition, returnPolicy: string, age: ProductAge | null, productVerificationLabels: Array<VerificationLabel>, listingQualityScore: bigint | null): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bargainsByProduct(productId: bigint): Promise<Array<BargainRequest>>;
     browseProductsWithShop(): Promise<Array<ProductWithShopDetails>>;

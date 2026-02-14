@@ -47,15 +47,12 @@ export default function ProductDetailPage() {
   const { identity } = useInternetIdentity();
   const [showBargainForm, setShowBargainForm] = useState(false);
 
-  const { data, isLoading, error } = useGetProductDetails(productId);
+  const { data: productDetails, isLoading, error } = useGetProductDetails(productId);
   const { data: allProducts } = useBrowseProductsWithShop();
   const { data: likeStatus } = useGetProductLikeStatus(productId);
   const addToCartMutation = useAddToCart();
   const likeMutation = useLikeProduct();
   const unlikeMutation = useUnlikeProduct();
-
-  const product = data?.product;
-  const shop = data?.shop;
 
   const handleAddToCart = async () => {
     if (!identity) {
@@ -81,7 +78,7 @@ export default function ProductDetailPage() {
     }
 
     try {
-      if (likeStatus?.isLiked) {
+      if (likeStatus) {
         await unlikeMutation.mutateAsync(BigInt(productId));
         toast.success('Removed from wishlist');
       } else {
@@ -104,7 +101,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  if (error || !product || !shop) {
+  if (error || !productDetails) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Alert variant="destructive">
@@ -117,7 +114,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const matchingProducts = allProducts ? findMatchingProducts(product.name, allProducts, product.id) : [];
+  const shop = productDetails.shop;
+  const matchingProducts = allProducts ? findMatchingProducts(productDetails.name, allProducts, productDetails.id) : [];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -125,36 +123,36 @@ export default function ProductDetailPage() {
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* Left Column - Photos */}
           <div>
-            <ProductPhotoGallery photoBlobs={product.photoBlobs} productName={product.name} />
+            <ProductPhotoGallery photoBlobs={productDetails.photoBlobs} productName={productDetails.name} />
           </div>
 
           {/* Right Column - Product Info */}
           <div className="space-y-6">
             <div>
               <div className="flex items-start justify-between gap-4 mb-3">
-                <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
-                <Badge variant={getConditionBadgeVariant(product.condition)}>
-                  {getConditionLabel(product.condition)}
+                <h1 className="text-3xl font-bold text-foreground">{productDetails.name}</h1>
+                <Badge variant={getConditionBadgeVariant(productDetails.condition)}>
+                  {getConditionLabel(productDetails.condition)}
                 </Badge>
               </div>
-              <p className="text-lg text-muted-foreground">{product.description}</p>
+              <p className="text-lg text-muted-foreground">{productDetails.description}</p>
             </div>
 
             {/* Product Age (for Used products) */}
-            {product.condition === 'used' && product.age && product.age.conditionDescription && (
+            {productDetails.condition === 'used' && productDetails.age && productDetails.age.conditionDescription && (
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <h3 className="font-semibold text-sm">Product Age</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">{product.age.conditionDescription}</p>
+                <p className="text-sm text-muted-foreground">{productDetails.age.conditionDescription}</p>
               </div>
             )}
 
             {/* Verification Labels */}
-            {product.productVerificationLabels && product.productVerificationLabels.length > 0 && (
+            {productDetails.productVerificationLabels && productDetails.productVerificationLabels.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {product.productVerificationLabels.map((label, index) => (
+                {productDetails.productVerificationLabels.map((label, index) => (
                   <Badge key={index} variant="secondary" className="flex items-center gap-1.5">
                     {label.labelText === 'Verified Product' ? (
                       <BadgeCheck className="h-3.5 w-3.5" />
@@ -170,11 +168,11 @@ export default function ProductDetailPage() {
             {/* Return Policy */}
             <div className="bg-muted/50 rounded-lg p-4">
               <h3 className="font-semibold text-sm mb-2">Return Policy</h3>
-              <p className="text-sm text-muted-foreground">{product.returnPolicy}</p>
+              <p className="text-sm text-muted-foreground">{productDetails.returnPolicy}</p>
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-primary">{formatCurrency(product.price)}</span>
+              <span className="text-4xl font-bold text-primary">{formatCurrency(productDetails.price)}</span>
             </div>
 
             {/* Action Buttons */}
@@ -190,11 +188,11 @@ export default function ProductDetailPage() {
               </Button>
               <Button
                 size="lg"
-                variant={likeStatus?.isLiked ? 'default' : 'outline'}
+                variant={likeStatus ? 'default' : 'outline'}
                 onClick={handleToggleLike}
                 disabled={likeMutation.isPending || unlikeMutation.isPending}
               >
-                <Heart className={`h-5 w-5 ${likeStatus?.isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5 ${likeStatus ? 'fill-current' : ''}`} />
               </Button>
             </div>
 

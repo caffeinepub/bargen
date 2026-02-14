@@ -166,6 +166,26 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'acceptBargain' : ActorMethod<[bigint], undefined>,
   'addToCart' : ActorMethod<[bigint, bigint], undefined>,
+  'adminBrowseProductsWithShop' : ActorMethod<
+    [],
+    Array<ProductWithShopDetails>
+  >,
+  'adminDeleteProduct' : ActorMethod<[bigint], undefined>,
+  'adminUpdateProduct' : ActorMethod<
+    [
+      bigint,
+      string,
+      string,
+      bigint,
+      [] | [Array<ExternalBlob>],
+      Condition,
+      string,
+      [] | [ProductAge],
+      Array<VerificationLabel>,
+      [] | [bigint],
+    ],
+    undefined
+  >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bargainsByProduct' : ActorMethod<[bigint], Array<BargainRequest>>,
   'browseProductsWithShop' : ActorMethod<[], Array<ProductWithShopDetails>>,

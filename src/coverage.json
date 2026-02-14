@@ -1,91 +1,39 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T18:15:27.311Z",
+  "generatedAt": "2026-02-13T05:54:50.578Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 3,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Extend the backend Product model to store used-product age text, product verification labels, and a return policy value, and include these fields anywhere products are returned to the frontend (e.g., product detail and browse listings).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Update backend create/update product APIs to accept and persist the new fields (used-product age text, product verification label(s), and return policy), applying basic validation so that product age is only accepted when condition is used.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Add a conditional migration for existing product records so the new product fields have safe defaults after upgrade (do not break existing deployments/state).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Update the shopkeeper product creation UI to capture: (1) used-product age text shown only when condition is Used, (2) product verification label(s) allowing selection of \"Verified Product\" and/or \"Quality Checked\", and (3) return policy selection among \"Return Available\", \"No Return\", and \"Exchange Only\"; submit these values when creating a product.",
+        "summary": "Publish the currently deployed draft of the application to a live (non-expiring) deployment so it remains accessible without requiring a rebuild.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/ShopkeeperProductsPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/App.tsx",
+          "frontend/src/main.tsx",
+          "frontend/DEPLOYMENT.md"
         ],
         "matchedFiles": [
-          "frontend/src/pages/ShopkeeperProductsPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Display the new product fields on the product detail page: show a Product age section for used items, show product verification badge(s)/labels, and show a Return policy section with the selected value.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/ProductDetailPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/ProductDetailPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Ensure multiple image upload is supported end-to-end for product creation and product detail viewing, allowing multiple photos to be uploaded, previewed, stored, and browsed in the gallery.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/products/ProductPhotosPicker.tsx",
-          "frontend/src/pages/ShopkeeperProductsPage.tsx",
-          "frontend/src/components/products/ProductPhotoGallery.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/products/ProductPhotosPicker.tsx",
-          "frontend/src/pages/ShopkeeperProductsPage.tsx"
+          "frontend/src/App.tsx",
+          "frontend/DEPLOYMENT.md"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/products/ProductPhotosPicker.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/ProductDetailPage.tsx",
-    "frontend/src/pages/ShopkeeperProductsPage.tsx",
+    "frontend/DEPLOYMENT.md",
+    "frontend/src/App.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

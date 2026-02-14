@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useBrowseProductsWithShop, useCreateProduct, useGetOwnShopProfiles, useGetBargainsByProduct, useAcceptBargain } from '../hooks/useQueries';
+import { useBrowseProductsWithShop, useCreateProduct, useUpdateProduct, useDeleteProduct, useGetOwnShopProfiles, useGetBargainsByProduct, useAcceptBargain } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import AuthGate from '../components/AuthGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,12 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Package, AlertCircle, Store, HandshakeIcon, Inbox } from 'lucide-react';
+import { Plus, Package, AlertCircle, Store, HandshakeIcon, Inbox, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/currency';
 import { normalizeBackendError } from '../utils/backendErrors';
 import ProductPhotosPicker from '../components/products/ProductPhotosPicker';
 import ProductPhotoThumb from '../components/products/ProductPhotoThumb';
+import EditProductDialog from '../components/products/EditProductDialog';
+import DeleteProductConfirmDialog from '../components/products/DeleteProductConfirmDialog';
 import { ExternalBlob, Condition, VerificationLabel, ProductAge, ProductAgeTime } from '@/backend';
 import { getConditionLabel, getConditionBadgeVariant } from '../utils/productCondition';
 
@@ -42,6 +44,8 @@ export default function ShopkeeperProductsPage() {
   const { data: allProducts, isLoading: productsLoading } = useBrowseProductsWithShop();
   const { data: ownShops, isLoading: shopsLoading } = useGetOwnShopProfiles();
   const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
   const acceptBargainMutation = useAcceptBargain();
 
   const myProducts = allProducts?.filter(
@@ -405,6 +409,10 @@ export default function ShopkeeperProductsPage() {
                   product={product}
                   onAcceptBargain={handleAcceptBargain}
                   isAccepting={acceptBargainMutation.isPending}
+                  onUpdate={updateProductMutation.mutateAsync}
+                  onDelete={deleteProductMutation.mutateAsync}
+                  isUpdating={updateProductMutation.isPending}
+                  isDeleting={deleteProductMutation.isPending}
                 />
               ))}
             </div>
@@ -419,75 +427,149 @@ function ProductCardWithBargains({
   product,
   onAcceptBargain,
   isAccepting,
+  onUpdate,
+  onDelete,
+  isUpdating,
+  isDeleting,
 }: {
   product: any;
   onAcceptBargain: (bargainId: bigint) => void;
   isAccepting: boolean;
+  onUpdate: (data: any) => Promise<void>;
+  onDelete: (productId: bigint) => Promise<void>;
+  isUpdating: boolean;
+  isDeleting: boolean;
 }) {
   const { data: bargains } = useGetBargainsByProduct(product.id.toString());
   const pendingBargains = bargains?.filter((b) => !b.mutuallyAccepted) || [];
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleUpdate = async (data: any) => {
+    try {
+      await onUpdate(data);
+      toast.success('Product updated successfully!');
+      setEditDialogOpen(false);
+    } catch (err: any) {
+      toast.error(normalizeBackendError(err));
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await onDelete(product.id);
+      toast.success('Product deleted successfully!');
+      setDeleteDialogOpen(false);
+    } catch (err: any) {
+      toast.error(normalizeBackendError(err));
+    }
+  };
 
   return (
-    <Card>
-      <ProductPhotoThumb
-        photoBlobs={product.photoBlobs}
-        productName={product.name}
-        className="w-full h-48 rounded-t-lg"
-      />
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <CardTitle className="text-lg">{product.name}</CardTitle>
-          <Badge variant={getConditionBadgeVariant(product.condition)} className="shrink-0">
-            {getConditionLabel(product.condition)}
-          </Badge>
-        </div>
-        <CardDescription className="line-clamp-2">{product.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Listed Price</p>
-            <p className="text-2xl font-bold text-primary">{formatCurrency(product.price)}</p>
+    <>
+      <Card>
+        <ProductPhotoThumb
+          photoBlobs={product.photoBlobs}
+          productName={product.name}
+          className="w-full h-48 rounded-t-lg"
+        />
+        <CardHeader>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <CardTitle className="text-lg">{product.name}</CardTitle>
+            <Badge variant={getConditionBadgeVariant(product.condition)}>
+              {getConditionLabel(product.condition)}
+            </Badge>
+          </div>
+          <CardDescription className="line-clamp-2">{product.description}</CardDescription>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xl font-bold text-primary">{formatCurrency(product.price)}</p>
+          </div>
+          {product.age && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Age: {product.age.conditionDescription}
+            </p>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => setEditDialogOpen(true)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-destructive hover:text-destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
           </div>
 
-          <div>
-            <Badge variant="secondary">{product.shop.name}</Badge>
-          </div>
-
+          {/* Bargain Requests */}
           {pendingBargains.length > 0 && (
-            <div className="pt-4 border-t">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 mb-2">
                 <HandshakeIcon className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">
-                  {pendingBargains.length} Pending Bargain{pendingBargains.length > 1 ? 's' : ''}
-                </p>
+                <span className="text-sm font-medium">
+                  {pendingBargains.length} Bargain Request{pendingBargains.length > 1 ? 's' : ''}
+                </span>
               </div>
               <div className="space-y-2">
                 {pendingBargains.slice(0, 2).map((bargain) => (
-                  <div key={bargain.id.toString()} className="p-3 bg-muted rounded-lg space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm font-medium">Offer: {formatCurrency(bargain.desiredPrice)}</p>
-                        {bargain.note && (
-                          <p className="text-xs text-muted-foreground mt-1">{bargain.note}</p>
-                        )}
-                      </div>
+                  <div
+                    key={bargain.id.toString()}
+                    className="flex items-center justify-between p-2 bg-muted rounded-md text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{formatCurrency(bargain.desiredPrice)}</p>
+                      {bargain.note && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">{bargain.note}</p>
+                      )}
                     </div>
                     <Button
                       size="sm"
-                      className="w-full"
+                      variant="default"
                       onClick={() => onAcceptBargain(bargain.id)}
                       disabled={isAccepting}
                     >
-                      {isAccepting ? 'Accepting...' : 'Accept Offer'}
+                      Accept
                     </Button>
                   </div>
                 ))}
+                {pendingBargains.length > 2 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{pendingBargains.length - 2} more
+                  </p>
+                )}
               </div>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <EditProductDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        product={product}
+        onSubmit={handleUpdate}
+        isSubmitting={isUpdating}
+      />
+
+      <DeleteProductConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        productName={product.name}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 }

@@ -99,7 +99,7 @@ export default function MessagesThreadPage() {
     );
   }
 
-  const { product, shop } = productDetails;
+  const shop = productDetails.shop;
   const otherUserName = otherUserProfile?.name || 'User';
 
   return (
@@ -120,7 +120,7 @@ export default function MessagesThreadPage() {
                   <CardTitle>Conversation with {otherUserName}</CardTitle>
                   <CardDescription className="flex items-center gap-2 mt-1">
                     <Package className="h-4 w-4" />
-                    About: {product.name}
+                    About: {productDetails.name}
                   </CardDescription>
                 </div>
               </div>

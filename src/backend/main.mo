@@ -14,9 +14,8 @@ import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
-import Migration "migration";
 
-(with migration = Migration.run)
+// Live deployment of v20240419
 actor {
   // === State Management ===
   let accessControlState = AccessControl.initState();
@@ -290,6 +289,115 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+  };
+
+  // === Admin Product Management APIs ===
+
+  // List all products with shop details (admin only)
+  public query ({ caller }) func adminBrowseProductsWithShop() : async [ProductWithShopDetails] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can use these APIs");
+    };
+    var result = List.empty<ProductWithShopDetails>();
+
+    for ((_, product) in products.entries()) {
+      switch (shops.get(product.shopId)) {
+        case (null) {};
+        case (?shop) {
+          let productWithShop : ProductWithShopDetails = {
+            id = product.id;
+            shop;
+            name = product.name;
+            description = product.description;
+            price = product.price;
+            photoBlobs = product.photoBlobs;
+            condition = product.condition;
+            returnPolicy = product.returnPolicy;
+            age = product.age;
+            productVerificationLabels = product.productVerificationLabels;
+            listingQualityScore = product.listingQualityScore;
+          };
+          result.add(productWithShop);
+        };
+      };
+    };
+
+    result.toArray().sort(
+      func(a, b) {
+        switch (Nat.compare(a.shop.id, b.shop.id)) {
+          case (#equal) { Nat.compare(a.id, b.id) };
+          case (order) { order };
+        };
+      }
+    );
+  };
+
+  // Update any product (admin override)
+  public shared ({ caller }) func adminUpdateProduct(
+    productId : Nat,
+    name : Text,
+    description : Text,
+    price : Nat,
+    photoBlobs : ?[Storage.ExternalBlob],
+    condition : Condition,
+    returnPolicy : Text,
+    age : ?ProductAge,
+    productVerificationLabels : [VerificationLabel],
+    listingQualityScore : ?Nat,
+  ) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can use these APIs");
+    };
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product does not exist") };
+      case (?product) {
+        // Validate that shopId exists
+        if (shops.get(product.shopId) == null) {
+          Runtime.trap("Shop does not exist");
+        };
+
+        // Validate age is only provided for used products
+        switch (condition) {
+          case (#new) {
+            if (age != null) {
+              Runtime.trap(
+                "Validation error: Product age can only be specified for used products"
+              );
+            };
+          };
+          case (#used) {
+            // Age is optional for used products, no validation needed
+          };
+        };
+
+        let updatedProduct = {
+          product with name;
+          description;
+          price;
+          photoBlobs;
+          condition;
+          returnPolicy;
+          age;
+          productVerificationLabels;
+          listingQualityScore;
+        };
+        products.add(productId, updatedProduct);
+      };
+    };
+  };
+
+  // Delete any product (admin override)
+  public shared ({ caller }) func adminDeleteProduct(productId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete products");
+    };
+
+    switch (products.get(productId)) {
+      case (null) { Runtime.trap("Product does not exist") };
+      case (?_) {
+        products.remove(productId);
+      };
+    };
   };
 
   // === Shopkeeper APIs ===

@@ -1,8 +1,8 @@
 import AdminGate from '../components/admin/AdminGate';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Package, AlertTriangle, FileText } from 'lucide-react';
+import { Shield, Package, AlertTriangle, FileText, ShoppingBag } from 'lucide-react';
+import AdminProductsTab from '../components/admin/AdminProductsTab';
 
 export default function AdminMonitoringPage() {
   return (
@@ -14,22 +14,26 @@ export default function AdminMonitoringPage() {
               <Shield className="h-8 w-8 text-primary" />
               Admin Monitoring
             </h1>
-            <p className="text-muted-foreground">Monitor deals, reports, and claims across the platform</p>
+            <p className="text-muted-foreground">Monitor deals, reports, claims, and products across the platform</p>
           </div>
 
           <Tabs defaultValue="deals" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="deals">
                 <Package className="h-4 w-4 mr-2" />
-                Deal Protection Orders
+                Deal Protection
               </TabsTrigger>
               <TabsTrigger value="reports">
                 <AlertTriangle className="h-4 w-4 mr-2" />
-                Seller Reports
+                Reports
               </TabsTrigger>
               <TabsTrigger value="claims">
                 <FileText className="h-4 w-4 mr-2" />
                 Claims
+              </TabsTrigger>
+              <TabsTrigger value="products">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                Products
               </TabsTrigger>
             </TabsList>
 
@@ -52,7 +56,7 @@ export default function AdminMonitoringPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Seller Reports</CardTitle>
-                  <CardDescription>Review and manage seller reports submitted by users</CardDescription>
+                  <CardDescription>Review and manage seller reports from customers</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-12 text-muted-foreground">
@@ -67,7 +71,7 @@ export default function AdminMonitoringPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Claims</CardTitle>
-                  <CardDescription>Review and update claim statuses</CardDescription>
+                  <CardDescription>Review and process customer claims</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-12 text-muted-foreground">
@@ -76,6 +80,10 @@ export default function AdminMonitoringPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="products">
+              <AdminProductsTab />
             </TabsContent>
           </Tabs>
         </div>

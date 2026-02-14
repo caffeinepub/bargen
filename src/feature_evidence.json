@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-shopkeeper-product-creation-ui-to-capture-1-used-product-age-text-shown-only-when-condition-is-used-2-product-verification-label-s-allowing-selection-of-verified-product-and-or-quality-checked-and-3-return-policy-selection-among-return-available-no-return-and-exchange-only-submit-these-values-when-creating-a-product",
-      "featureTitle": "Update the shopkeeper product creation UI to capture: (1) used-product age text shown only when condition is Used, (2) product verification label(s) allowing selection of \"Verified Product\" and/or \"Quality Checked\", and (3) return policy selection among \"Return Available\", \"No Return\", and \"Exchange Only\"; submit these values when creating a product.",
+      "featureId": "feature-publish-the-currently-deployed-draft-of-the-application-to-a-live-non-expiring-deployment-so-it-remains-accessible-without-requiring-a-rebuild",
+      "featureTitle": "Publish the currently deployed draft of the application to a live (non-expiring) deployment so it remains accessible without requiring a rebuild.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/ShopkeeperProductsPage.tsx"
+        "frontend/DEPLOYMENT.md",
+        "frontend/src/App.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,48 +18,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-display-the-new-product-fields-on-the-product-detail-page-show-a-product-age-section-for-used-items-show-product-verification-badge-s-labels-and-show-a-return-policy-section-with-the-selected-value",
-      "featureTitle": "Display the new product fields on the product detail page: show a Product age section for used items, show product verification badge(s)/labels, and show a Return policy section with the selected value.",
-      "files": [
-        "frontend/src/pages/ProductDetailPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-multiple-image-upload-is-supported-end-to-end-for-product-creation-and-product-detail-viewing-allowing-multiple-photos-to-be-uploaded-previewed-stored-and-browsed-in-the-gallery",
-      "featureTitle": "Ensure multiple image upload is supported end-to-end for product creation and product detail viewing, allowing multiple photos to be uploaded, previewed, stored, and browsed in the gallery.",
-      "files": [
-        "frontend/src/components/products/ProductPhotosPicker.tsx",
-        "frontend/src/pages/ShopkeeperProductsPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
+        "REQ-1"
       ],
       "confidence": "high"
     }
